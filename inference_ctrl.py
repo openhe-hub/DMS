@@ -42,7 +42,8 @@ logger = logging.getLogger(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2):
+def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
+               kp_noise=0.0, kp_noise_seed=0, max_frames=None):
     """preprocess ref image pose and video pose
 
     Args:
@@ -91,7 +92,27 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
 
     pose_pixels = np.concatenate([np.expand_dims(image_pose, 0), video_pose])
     image_pixels = np.transpose(np.expand_dims(image_pixels, 0), (0, 3, 1, 2))
-    
+
+    # ---- sensitivity probe (training-free): optionally truncate the clip and
+    # inject keypoint jitter into ONLY the motion-field branch. pose_pixels (the
+    # drawn skeleton) is already built above from video_pose, so it stays clean;
+    # the noise reaches traj_flow / CMP flow / point_adapter only. kp_noise is in
+    # pixels (normalized internally). Defaults (0 / None) preserve exact behavior.
+    if max_frames is not None:
+        body_point_list = body_point_list[:max_frames]
+        face_point_list = face_point_list[:max_frames]
+        pose_pixels = pose_pixels[:max_frames]
+    if kp_noise and kp_noise > 0:
+        _rng = np.random.RandomState(kp_noise_seed)
+        for _f in range(1, len(body_point_list)):          # keep ref frame 0 clean
+            _cand = body_point_list[_f]['candidate'].copy()
+            _sub = np.asarray(body_point_list[_f]['subset'])[0]
+            for _i in range(_cand.shape[0]):
+                if _i < len(_sub) and _sub[_i] != -1:        # only visible keypoints
+                    _cand[_i, 0] += _rng.randn() * (kp_noise / w_target)
+                    _cand[_i, 1] += _rng.randn() * (kp_noise / h_target)
+            body_point_list[_f]['candidate'] = _cand
+
     dift_model = SDFeaturizer(sd_id = dift_model_path, weight_dtype=torch.float16)
     category="human"
     prompt = f'photo of a {category}'
