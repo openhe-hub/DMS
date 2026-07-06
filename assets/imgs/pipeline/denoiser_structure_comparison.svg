@@ -1,0 +1,204 @@
+<svg viewBox="0 0 1180 690" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#999"/>
+    </marker>
+    <g id="bg16">
+      <rect x="0" y="0" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="20" y="0" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="40" y="0" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="60" y="0" width="16" height="16" rx="2" fill="#e9e8e3"/>
+      <rect x="0" y="20" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="20" y="20" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="40" y="20" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="60" y="20" width="16" height="16" rx="2" fill="#e9e8e3"/>
+      <rect x="0" y="40" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="20" y="40" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="40" y="40" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="60" y="40" width="16" height="16" rx="2" fill="#e9e8e3"/>
+      <rect x="0" y="60" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="20" y="60" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="40" y="60" width="16" height="16" rx="2" fill="#e9e8e3"/><rect x="60" y="60" width="16" height="16" rx="2" fill="#e9e8e3"/>
+    </g>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="690" fill="#fdfcfa"/>
+  <text x="590" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#2a2a2a">四种去噪网络的内部结构对比</text>
+
+  <!-- column separators -->
+  <line x1="305" y1="50" x2="305" y2="620" stroke="#e5e3de" stroke-width="1"/>
+  <line x1="595" y1="50" x2="595" y2="620" stroke="#e5e3de" stroke-width="1"/>
+  <line x1="885" y1="50" x2="885" y2="620" stroke="#e5e3de" stroke-width="1"/>
+
+  <!-- ============ Column 1: 2D UNet ============ -->
+  <text x="155" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="#2a2a2a">2D UNet(图像)</text>
+  <text x="155" y="82" text-anchor="middle" font-size="10" font-style="italic" fill="#5b8db8">SD / Imagen</text>
+
+  <rect x="35" y="96" width="240" height="32" rx="6" fill="#f3f3f0" stroke="#bbb" stroke-width="1"/>
+  <text x="155" y="116" text-anchor="middle" font-size="10.5" fill="#555">noisy latent (c, H/8, W/8) · 单帧</text>
+  <line x1="155" y1="128" x2="155" y2="140" stroke="#999" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <rect x="35" y="142" width="240" height="44" rx="6" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="155" y="160" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">ResBlock · 3×3 2D conv</text>
+  <text x="155" y="177" text-anchor="middle" font-size="9.5" fill="#777">timestep embedding 在此注入</text>
+  <line x1="155" y1="186" x2="155" y2="198" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="35" y="198" width="240" height="44" rx="6" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="155" y="216" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Spatial Self-Attn</text>
+  <text x="155" y="233" text-anchor="middle" font-size="9.5" fill="#777">H·W 个 token,帧内全局交互</text>
+  <line x1="155" y1="242" x2="155" y2="254" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="35" y="254" width="240" height="44" rx="6" fill="#f3f3f0" stroke="#999" stroke-width="1.2"/>
+  <text x="155" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Cross-Attn</text>
+  <text x="155" y="289" text-anchor="middle" font-size="9.5" fill="#777">文本条件注入</text>
+
+  <line x1="281" y1="142" x2="281" y2="298" stroke="#888" stroke-width="1.2"/>
+  <text x="288" y="224" font-size="10.5" fill="#666">×N</text>
+
+  <text x="155" y="322" text-anchor="middle" font-size="9.5" fill="#888">整体 U 型:下采样 → mid → 上采样</text>
+  <text x="155" y="337" text-anchor="middle" font-size="9.5" fill="#888">+ skip connection(VAE 没有)</text>
+
+  <!-- ============ Column 2: Pseudo-3D UNet ============ -->
+  <text x="445" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="#2a2a2a">Pseudo-3D UNet</text>
+  <text x="445" y="82" text-anchor="middle" font-size="10" font-style="italic" fill="#5b8db8">Video LDM · AnimateDiff · SVD</text>
+
+  <rect x="325" y="96" width="240" height="32" rx="6" fill="#f3f3f0" stroke="#bbb" stroke-width="1"/>
+  <text x="445" y="116" text-anchor="middle" font-size="10.5" fill="#555">视频 latent (T, c, h, w) · 2D VAE 逐帧</text>
+  <line x1="445" y1="128" x2="445" y2="140" stroke="#999" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <rect x="325" y="142" width="240" height="44" rx="6" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="445" y="160" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">2D ResBlock(逐帧)</text>
+  <text x="445" y="177" text-anchor="middle" font-size="9.5" fill="#777">reshape → (B·T, c, h, w),T 并入 batch</text>
+  <line x1="445" y1="186" x2="445" y2="198" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="325" y="198" width="240" height="44" rx="6" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.8"/>
+  <text x="445" y="216" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">+ Temporal Conv 1D</text>
+  <text x="445" y="233" text-anchor="middle" font-size="9.5" fill="#a0672a">reshape → (B·h·w, c, T) · 零初始化插入</text>
+  <line x1="445" y1="242" x2="445" y2="254" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="325" y="254" width="240" height="44" rx="6" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="445" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Spatial Attn(逐帧)</text>
+  <text x="445" y="289" text-anchor="middle" font-size="9.5" fill="#777">同帧 h·w token 交互</text>
+  <line x1="445" y1="298" x2="445" y2="310" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="325" y="310" width="240" height="44" rx="6" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.8"/>
+  <text x="445" y="328" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">+ Temporal Attn</text>
+  <text x="445" y="345" text-anchor="middle" font-size="9.5" fill="#a0672a">同空间位置跨 T 帧 · RoPE/相对位置</text>
+  <line x1="445" y1="354" x2="445" y2="366" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="325" y="366" width="240" height="44" rx="6" fill="#f3f3f0" stroke="#999" stroke-width="1.2"/>
+  <text x="445" y="384" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Cross-Attn</text>
+  <text x="445" y="401" text-anchor="middle" font-size="9.5" fill="#777">文本条件注入</text>
+
+  <line x1="571" y1="142" x2="571" y2="410" stroke="#888" stroke-width="1.2"/>
+  <text x="578" y="280" font-size="10.5" fill="#666">×N</text>
+
+  <text x="445" y="432" text-anchor="middle" font-size="9.5" fill="#888">蓝层继承图像权重(可冻结/可插拔)</text>
+
+  <!-- ============ Column 3: Factorized DiT ============ -->
+  <text x="735" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="#2a2a2a">Factorized DiT</text>
+  <text x="735" y="82" text-anchor="middle" font-size="10" font-style="italic" fill="#5b8db8">Latte · 早期视频 DiT</text>
+
+  <rect x="615" y="96" width="240" height="32" rx="6" fill="#f3f3f0" stroke="#bbb" stroke-width="1"/>
+  <text x="735" y="116" text-anchor="middle" font-size="10.5" fill="#555">逐帧 patchify → T 组,每组 h·w token</text>
+  <line x1="735" y1="128" x2="735" y2="140" stroke="#999" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <rect x="615" y="142" width="240" height="44" rx="6" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="735" y="160" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Spatial Attn Block(+FFN)</text>
+  <text x="735" y="177" text-anchor="middle" font-size="9.5" fill="#777">序列长度 h·w,帧内交互</text>
+  <line x1="735" y1="186" x2="735" y2="198" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="615" y="198" width="240" height="44" rx="6" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.8"/>
+  <text x="735" y="216" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Temporal Attn Block(+FFN)</text>
+  <text x="735" y="233" text-anchor="middle" font-size="9.5" fill="#a0672a">序列长度 T,同 patch 跨帧</text>
+  <line x1="735" y1="242" x2="735" y2="254" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="615" y="254" width="240" height="44" rx="6" fill="#f3f3f0" stroke="#999" stroke-width="1.2"/>
+  <text x="735" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">adaLN-Zero 调制</text>
+  <text x="735" y="289" text-anchor="middle" font-size="9.5" fill="#777">timestep / 条件注入(每个 block 内)</text>
+
+  <line x1="861" y1="142" x2="861" y2="298" stroke="#888" stroke-width="1.2"/>
+  <text x="868" y="224" font-size="10.5" fill="#666">×N</text>
+
+  <text x="735" y="322" text-anchor="middle" font-size="9.5" fill="#888">无 UNet 下/上采样与 skip:</text>
+  <text x="735" y="337" text-anchor="middle" font-size="9.5" fill="#888">等分辨率 Transformer 堆叠,分解思想不变</text>
+
+  <!-- ============ Column 4: Joint DiT ============ -->
+  <text x="1025" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="#2a2a2a">Joint Spatiotemporal DiT</text>
+  <text x="1025" y="82" text-anchor="middle" font-size="10" font-style="italic" fill="#629b6d">Sora · Wan · CogVideoX</text>
+
+  <rect x="905" y="96" width="240" height="32" rx="6" fill="#f3f3f0" stroke="#bbb" stroke-width="1"/>
+  <text x="1025" y="116" text-anchor="middle" font-size="10.5" fill="#555">3D patchify → t·h·w token 单一序列</text>
+  <line x1="1025" y1="128" x2="1025" y2="140" stroke="#999" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <rect x="905" y="142" width="240" height="44" rx="6" fill="#eff6f0" stroke="#629b6d" stroke-width="2"/>
+  <text x="1025" y="160" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">Full 3D Self-Attn</text>
+  <text x="1025" y="177" text-anchor="middle" font-size="9.5" fill="#4a7a54">所有时空 token 两两交互 · 3D RoPE</text>
+  <line x1="1025" y1="186" x2="1025" y2="198" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="905" y="198" width="240" height="44" rx="6" fill="#f3f3f0" stroke="#999" stroke-width="1.2"/>
+  <text x="1025" y="216" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">文本条件</text>
+  <text x="1025" y="233" text-anchor="middle" font-size="9.5" fill="#777">Cross-Attn(Wan)或 MMDiT 双流拼接</text>
+  <line x1="1025" y1="242" x2="1025" y2="254" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="905" y="254" width="240" height="44" rx="6" fill="#f3f3f0" stroke="#999" stroke-width="1.2"/>
+  <text x="1025" y="272" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a2a2a">FFN + adaLN</text>
+  <text x="1025" y="289" text-anchor="middle" font-size="9.5" fill="#777">timestep 调制</text>
+
+  <line x1="1151" y1="142" x2="1151" y2="298" stroke="#888" stroke-width="1.2"/>
+  <text x="1158" y="224" font-size="10.5" fill="#666">×N</text>
+
+  <text x="1025" y="322" text-anchor="middle" font-size="9.5" fill="#888">没有独立"时序层"可拔插:</text>
+  <text x="1025" y="337" text-anchor="middle" font-size="9.5" fill="#888">时空建模融合在同一个 attention 里</text>
+
+  <!-- ============ Attention scope grids ============ -->
+  <text x="590" y="478" text-anchor="middle" font-size="13" font-weight="700" fill="#2a2a2a">一个 query token 的 attention 感受野(横轴 = 时间帧,纵轴 = 空间位置)</text>
+
+  <!-- Grid 1 -->
+  <use href="#bg16" x="117" y="496"/>
+  <rect x="137" y="496" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="137" y="536" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="137" y="556" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="137" y="516" width="16" height="16" rx="2" fill="#333"/>
+  <text x="155" y="592" text-anchor="middle" font-size="9" fill="#999">时间 →</text>
+  <text x="155" y="612" text-anchor="middle" font-size="10" fill="#555">单帧内空间全局</text>
+  <text x="155" y="626" text-anchor="middle" font-size="9" fill="#999">(每帧独立处理)</text>
+
+  <!-- Grid 2 -->
+  <use href="#bg16" x="407" y="496"/>
+  <rect x="427" y="496" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="427" y="536" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="427" y="556" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="407" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="447" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="467" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="427" y="516" width="16" height="16" rx="2" fill="#333"/>
+  <text x="445" y="592" text-anchor="middle" font-size="9" fill="#999">时间 →</text>
+  <text x="445" y="612" text-anchor="middle" font-size="10" fill="#555">十字形:帧内 + 同位置跨帧</text>
+  <text x="445" y="626" text-anchor="middle" font-size="9" fill="#999">(斜向运动需多层接力传播)</text>
+
+  <!-- Grid 3 -->
+  <use href="#bg16" x="697" y="496"/>
+  <rect x="717" y="496" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="717" y="536" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="717" y="556" width="16" height="16" rx="2" fill="#5b8db8" fill-opacity="0.55"/>
+  <rect x="697" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="737" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="757" y="516" width="16" height="16" rx="2" fill="#d98e3f" fill-opacity="0.6"/>
+  <rect x="717" y="516" width="16" height="16" rx="2" fill="#333"/>
+  <text x="735" y="592" text-anchor="middle" font-size="9" fill="#999">时间 →</text>
+  <text x="735" y="612" text-anchor="middle" font-size="10" fill="#555">同左:分解模式不变</text>
+  <text x="735" y="626" text-anchor="middle" font-size="9" fill="#999">(只是骨架换成 Transformer)</text>
+
+  <!-- Grid 4 -->
+  <use href="#bg16" x="987" y="496"/>
+  <rect x="987" y="496" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1007" y="496" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1027" y="496" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1047" y="496" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/>
+  <rect x="987" y="516" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1027" y="516" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1047" y="516" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/>
+  <rect x="987" y="536" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1007" y="536" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1027" y="536" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1047" y="536" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/>
+  <rect x="987" y="556" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1007" y="556" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1027" y="556" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/><rect x="1047" y="556" width="16" height="16" rx="2" fill="#629b6d" fill-opacity="0.5"/>
+  <rect x="1007" y="516" width="16" height="16" rx="2" fill="#333"/>
+  <text x="1025" y="592" text-anchor="middle" font-size="9" fill="#999">时间 →</text>
+  <text x="1025" y="612" text-anchor="middle" font-size="10" fill="#555">全时空:任意两 token 直接交互</text>
+  <text x="1025" y="626" text-anchor="middle" font-size="9" fill="#999">(前提:3D VAE 已压缩 token 数)</text>
+
+  <!-- Legend -->
+  <rect x="270" y="652" width="12" height="12" rx="2" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.5"/>
+  <text x="288" y="662" font-size="10" fill="#555">空间层(继承图像模型)</text>
+  <rect x="430" y="652" width="12" height="12" rx="2" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.5"/>
+  <text x="448" y="662" font-size="10" fill="#555">时序层(视频新增,零初始化)</text>
+  <rect x="620" y="652" width="12" height="12" rx="2" fill="#eff6f0" stroke="#629b6d" stroke-width="1.5"/>
+  <text x="638" y="662" font-size="10" fill="#555">联合时空层</text>
+  <rect x="730" y="652" width="12" height="12" rx="2" fill="#f3f3f0" stroke="#999" stroke-width="1"/>
+  <text x="748" y="662" font-size="10" fill="#555">条件 / FFN</text>
+  <rect x="838" y="652" width="12" height="12" rx="2" fill="#333"/>
+  <text x="856" y="662" font-size="10" fill="#555">query token</text>
+</svg>

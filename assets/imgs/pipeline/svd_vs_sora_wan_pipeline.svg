@@ -1,0 +1,134 @@
+<svg viewBox="0 0 1240 795" xmlns="http://www.w3.org/2000/svg" font-family="'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif">
+  <defs>
+    <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#999"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1240" height="795" fill="#fdfcfa"/>
+  <text x="620" y="30" text-anchor="middle" font-size="18" font-weight="700" fill="#2a2a2a">全管线对比:SVD vs Sora / Wan(VAE → Latent → 去噪网络 → 解码)</text>
+
+  <!-- ================= Row 1: SVD ================= -->
+  <rect x="15" y="48" width="1210" height="300" rx="12" fill="#f7f9fb" stroke="#dfe6ec" stroke-width="1"/>
+  <text x="35" y="76" font-size="14" font-weight="700" fill="#5b8db8">SVD · 2D VAE + Factorized UNet(2023)</text>
+
+  <!-- input -->
+  <rect x="35" y="165" width="110" height="76" rx="8" fill="#ffffff" stroke="#bbb" stroke-width="1"/>
+  <text x="90" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="#333">像素视频</text>
+  <text x="90" y="218" text-anchor="middle" font-size="10" fill="#777">(T, H, W, 3)</text>
+  <line x1="145" y1="203" x2="166" y2="203" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- encoder -->
+  <rect x="170" y="150" width="155" height="110" rx="8" fill="#faf0ec" stroke="#c96442" stroke-width="1.5"/>
+  <text x="247" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#2a2a2a">2D VAE Encoder</text>
+  <text x="247" y="194" text-anchor="middle" font-size="9.5" fill="#666">逐帧独立编码,互不通信</text>
+  <text x="247" y="211" text-anchor="middle" font-size="9.5" fill="#666">仅空间 8× 压缩</text>
+  <text x="247" y="246" text-anchor="middle" font-size="9" font-style="italic" fill="#c96442">SD VAE 权重直接复用</text>
+  <line x1="325" y1="203" x2="346" y2="203" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- latent -->
+  <text x="435" y="162" text-anchor="middle" font-size="11" font-weight="700" fill="#2a2a2a">2D Latent (T, 4, h, w)</text>
+  <rect x="360" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="381" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="402" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="423" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="444" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="465" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <rect x="486" y="178" width="13" height="54" rx="2" fill="#c96442" fill-opacity="0.25" stroke="#c96442" stroke-width="1"/>
+  <text x="435" y="254" text-anchor="middle" font-size="9.5" fill="#888">时间维不压缩:仍是 T 个独立帧片</text>
+  <line x1="510" y1="203" x2="554" y2="203" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- denoiser -->
+  <rect x="560" y="120" width="330" height="172" rx="10" fill="#ffffff" stroke="#5b8db8" stroke-width="1.8"/>
+  <text x="725" y="142" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2a2a2a">Factorized UNet(全参微调)</text>
+  <rect x="590" y="154" width="270" height="24" rx="5" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.2"/>
+  <text x="725" y="170" text-anchor="middle" font-size="10" fill="#333">2D ResBlock(逐帧)</text>
+  <rect x="590" y="184" width="270" height="24" rx="5" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.4"/>
+  <text x="725" y="200" text-anchor="middle" font-size="10" fill="#333">+ Temporal Conv(零初始化插入)</text>
+  <rect x="590" y="214" width="270" height="24" rx="5" fill="#eef4f9" stroke="#5b8db8" stroke-width="1.2"/>
+  <text x="725" y="230" text-anchor="middle" font-size="10" fill="#333">Spatial Attn(逐帧)</text>
+  <rect x="590" y="244" width="270" height="24" rx="5" fill="#fbf1e3" stroke="#d98e3f" stroke-width="1.4"/>
+  <text x="725" y="260" text-anchor="middle" font-size="10" fill="#333">+ Temporal Attn(同位置跨帧)</text>
+  <line x1="868" y1="154" x2="868" y2="268" stroke="#888" stroke-width="1.2"/>
+  <text x="874" y="215" font-size="10" fill="#666">×N</text>
+  <text x="725" y="284" text-anchor="middle" font-size="9" fill="#888">U 型下/上采样 + skip connection</text>
+  <line x1="890" y1="203" x2="916" y2="203" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- decoder -->
+  <rect x="920" y="150" width="145" height="110" rx="8" fill="#faf0ec" stroke="#c96442" stroke-width="1.5"/>
+  <text x="992" y="172" text-anchor="middle" font-size="12" font-weight="700" fill="#2a2a2a">2D VAE Decoder</text>
+  <text x="992" y="194" text-anchor="middle" font-size="9.5" fill="#666">逐帧解码</text>
+  <text x="992" y="211" text-anchor="middle" font-size="9.5" fill="#666">decoder 侧加时序层</text>
+  <text x="992" y="228" text-anchor="middle" font-size="9.5" fill="#666">缓解帧间闪烁</text>
+  <line x1="1065" y1="203" x2="1086" y2="203" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- output -->
+  <rect x="1090" y="165" width="115" height="76" rx="8" fill="#ffffff" stroke="#bbb" stroke-width="1"/>
+  <text x="1147" y="198" text-anchor="middle" font-size="12" font-weight="700" fill="#333">视频</text>
+  <text x="1147" y="218" text-anchor="middle" font-size="10" fill="#777">(T, H, W, 3)</text>
+
+  <text x="620" y="332" text-anchor="middle" font-size="10" fill="#888">条件:CLIP 图像 embedding(I2V 为主)· EDM / v-prediction 训练目标 · 继承并改写 SD 图像先验</text>
+
+  <!-- ================= Row 2: Sora / Wan ================= -->
+  <rect x="15" y="362" width="1210" height="300" rx="12" fill="#f5f9f6" stroke="#dde8df" stroke-width="1"/>
+  <text x="35" y="390" font-size="14" font-weight="700" fill="#629b6d">Sora / Wan · 3D Causal VAE + Joint DiT(2024–)</text>
+
+  <!-- input -->
+  <rect x="35" y="479" width="110" height="76" rx="8" fill="#ffffff" stroke="#bbb" stroke-width="1"/>
+  <text x="90" y="512" text-anchor="middle" font-size="12" font-weight="700" fill="#333">像素视频</text>
+  <text x="90" y="532" text-anchor="middle" font-size="10" fill="#777">(T, H, W, 3)</text>
+  <line x1="145" y1="517" x2="166" y2="517" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- encoder -->
+  <rect x="170" y="464" width="155" height="110" rx="8" fill="#faf0ec" stroke="#c96442" stroke-width="1.5"/>
+  <text x="247" y="486" text-anchor="middle" font-size="11" font-weight="700" fill="#2a2a2a">3D Causal VAE Encoder</text>
+  <text x="247" y="508" text-anchor="middle" font-size="9.5" fill="#666">causal conv · 4×8×8 时空压缩</text>
+  <text x="247" y="525" text-anchor="middle" font-size="9.5" fill="#666">首帧退化 2D → 兼容图片</text>
+  <text x="247" y="560" text-anchor="middle" font-size="9" font-style="italic" fill="#c96442">Wan-VAE(MAGVIT 血统)</text>
+  <line x1="325" y1="517" x2="346" y2="517" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- latent -->
+  <text x="435" y="476" text-anchor="middle" font-size="11" font-weight="700" fill="#2a2a2a">3D Latent (t, 16, h, w),t ≈ T/4</text>
+  <rect x="375" y="492" width="30" height="54" rx="3" fill="#c96442" fill-opacity="0.35" stroke="#c96442" stroke-width="1.2"/>
+  <rect x="417" y="492" width="30" height="54" rx="3" fill="#c96442" fill-opacity="0.35" stroke="#c96442" stroke-width="1.2"/>
+  <rect x="459" y="492" width="30" height="54" rx="3" fill="#c96442" fill-opacity="0.35" stroke="#c96442" stroke-width="1.2"/>
+  <text x="435" y="568" text-anchor="middle" font-size="9.5" fill="#888">时间压缩 4× · 通道扩容至 16(承载 4 帧信息)</text>
+  <line x1="510" y1="517" x2="554" y2="517" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- denoiser -->
+  <rect x="560" y="434" width="330" height="172" rx="10" fill="#ffffff" stroke="#629b6d" stroke-width="2"/>
+  <text x="725" y="456" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2a2a2a">Joint Spatiotemporal DiT</text>
+  <rect x="590" y="468" width="270" height="24" rx="5" fill="#f3f3f0" stroke="#999" stroke-width="1"/>
+  <text x="725" y="484" text-anchor="middle" font-size="10" fill="#333">3D Patchify(1×2×2)→ 单一序列</text>
+  <rect x="590" y="498" width="270" height="24" rx="5" fill="#eff6f0" stroke="#629b6d" stroke-width="1.6"/>
+  <text x="725" y="514" text-anchor="middle" font-size="10" fill="#333">Full 3D Self-Attn + 3D RoPE</text>
+  <rect x="590" y="528" width="270" height="24" rx="5" fill="#f3f3f0" stroke="#999" stroke-width="1"/>
+  <text x="725" y="544" text-anchor="middle" font-size="10" fill="#333">Cross-Attn(umT5 文本)/ MMDiT</text>
+  <rect x="590" y="558" width="270" height="24" rx="5" fill="#f3f3f0" stroke="#999" stroke-width="1"/>
+  <text x="725" y="574" text-anchor="middle" font-size="10" fill="#333">FFN + adaLN(timestep)</text>
+  <line x1="868" y1="498" x2="868" y2="582" stroke="#888" stroke-width="1.2"/>
+  <text x="874" y="544" font-size="10" fill="#666">×N</text>
+  <text x="725" y="598" text-anchor="middle" font-size="9" fill="#888">均匀同构 block,无下/上采样 · 可预测 scaling</text>
+  <line x1="890" y1="517" x2="916" y2="517" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- decoder -->
+  <rect x="920" y="464" width="145" height="110" rx="8" fill="#faf0ec" stroke="#c96442" stroke-width="1.5"/>
+  <text x="992" y="486" text-anchor="middle" font-size="11" font-weight="700" fill="#2a2a2a">3D Causal VAE Decoder</text>
+  <text x="992" y="508" text-anchor="middle" font-size="9.5" fill="#666">causal 时空上采样</text>
+  <text x="992" y="525" text-anchor="middle" font-size="9.5" fill="#666">feature cache</text>
+  <text x="992" y="542" text-anchor="middle" font-size="9.5" fill="#666">→ chunk 流式长视频</text>
+  <line x1="1065" y1="517" x2="1086" y2="517" stroke="#999" stroke-width="1.4" marker-end="url(#arr)"/>
+
+  <!-- output -->
+  <rect x="1090" y="479" width="115" height="76" rx="8" fill="#ffffff" stroke="#bbb" stroke-width="1"/>
+  <text x="1147" y="512" text-anchor="middle" font-size="12" font-weight="700" fill="#333">视频</text>
+  <text x="1147" y="532" text-anchor="middle" font-size="10" fill="#777">(T, H, W, 3)</text>
+
+  <text x="620" y="646" text-anchor="middle" font-size="10" fill="#888">条件:umT5 文本 cross-attn · Flow Matching 训练目标 · Wan2.2:高/低噪声双专家 MoE · 图文联合训练(T=1 即图片)</text>
+
+  <!-- ================= Bottom: token accounting ================= -->
+  <text x="620" y="692" text-anchor="middle" font-size="12.5" font-weight="700" fill="#2a2a2a">同一段 ≈17 帧 512×512 视频的 token 账本</text>
+  <text x="620" y="716" text-anchor="middle" font-size="10.5" fill="#4a708f">SVD:latent (16, 64, 64) —— attention 从不面对全序列:spatial 每帧 4,096 token(×16 次)+ temporal 每位置 16 token(×4,096 次)</text>
+  <text x="620" y="736" text-anchor="middle" font-size="10.5" fill="#4a7a54">Wan 式:latent (5, 64, 64) → patchify 1×2×2 → 单一序列 5×32×32 = 5,120 token —— O(n²) 全 attention 正面可承受</text>
+  <text x="620" y="768" text-anchor="middle" font-size="11" font-style="italic" fill="#777">SVD 用「分解」绕开长序列;Sora / Wan 用「压缩」把序列变短后正面处理 —— 压缩端做功,建模端才少妥协</text>
+</svg>
