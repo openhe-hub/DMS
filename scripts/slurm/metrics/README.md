@@ -23,4 +23,4 @@ The `*_dispose.slurm` scripts reference `/scratch/zl6890/...`; the `*_mimic.slur
 scripts reference `/scratch/yf23/chatsign-175/MimicMotion/...`. Adjust the paths
 if reproducing under different accounts.
 
-See `docs/experiments/baseline/sign_cmp_quantitative.md` for the results.
+See `docs/experiments/sign_comparison/quantitative.md` for the results.
