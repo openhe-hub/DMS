@@ -9,10 +9,19 @@
 
 ## 0. TL;DR
 
+> **⚰️ 最终结论（2026-07-02,step2 video-level pilot 后）:idea 已按预注册 gate 判死。**
+> 完整证据链:① 去噪打法死于 step1(真实 DWPose 抖动仅 2–3px,learned-INR 输给线性插值,
+> 见 `../experiments/step1_real_validation.md`);② 时域超分/低fps打法死于 step2 pilot
+> (RIFE 后处理 mid-PSNR 6/6 全胜控制侧连续化;linear≈spline≈siren,INR 垫底,
+> 见 `../experiments/step2_video_level.md`)。
+> 根本机制:**扩散的控制跟随误差 >> 控制信号的时间/噪声精度误差**——
+> pose 控制信号侧的任何精化在 video-level 都是二阶小量。此结论对"更好的 motion field"
+> 这一整类 idea 都成立,不止 SIREN。
+
 - **简单版（per-clip 测试时拟合 SIREN，无先验）打不过 baseline** —— 只是"光滑地插值噪声"。fd+高斯是又便宜又强的 baseline（这正是 DisPose 用它的原因）。
-- **学习版（摊销式 FiLM-调制 SIREN，跨序列训练 + 速度监督）在合成数据上决定性跑赢** —— 4 档噪声 velMSE 领先最强 baseline **约 2.2–2.7×**（held-out / 3 seeds / 方差小 / baseline 已给最优高斯 σ）。**核心假设成立：学到的运动先验能真正去噪。** 数据见实验文档。
-- 路线确定：**走学习版**。下一步从合成搬到**真实 DWPose 轨迹 + DisPose 生成视频的 VBench 指标**（paper 主战场）。
-- 表示层面 novelty 已被 **PA-HiRes**（2512.21183）和 **NIAF**（2603.01766）双重抢注，贡献只能落在"接入扩散动画控制 + 下游视频收益 + 任意帧率能力"。
+- **学习版（摊销式 FiLM-调制 SIREN，跨序列训练 + 速度监督）在合成数据上决定性跑赢** —— 4 档噪声 velMSE 领先最强 baseline **约 2.2–2.7×**。~~核心假设成立~~ → **后被 step1 证明是 train/test 同分布的产物,真实数据上不成立**。
+- ~~路线确定：走学习版~~ → step1 真实轨迹上完败(domain gap + 数据墙),转打"时域超分"(step2)→ 亦死于 RIFE anti-claim。
+- 表示层面 novelty 已被 **PA-HiRes**（2512.21183）和 **NIAF**（2603.01766）双重抢注 —— 且最终连"装法"的下游收益也被证伪。
 
 ---
 
