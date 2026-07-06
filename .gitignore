@@ -156,8 +156,14 @@ cython_debug/
 _.*
 
 # models and outputs
-# models/
+pretrained_weights/
+models/
 outputs/
+# model weights anywhere (multi-GB, never commit)
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
 
 # Replicate
 .cog
