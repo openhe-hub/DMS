@@ -1,20 +1,29 @@
+import copy
+
 from tqdm import tqdm
 import decord
 import numpy as np
 
 from .util import draw_pose
 from .dwpose_detector import dwpose_detector as dwprocessor
+from .graft import graft_pose_v2, blend_head_pose_only
 
 def get_video_pose(
-        video_path: str, 
-        ref_image: np.ndarray, 
-        sample_stride: int=1):
+        video_path: str,
+        ref_image: np.ndarray,
+        sample_stride: int=1,
+        graft: bool=False,
+        head_blend_ratio: float=0.15):
     """preprocess ref image pose and video pose
 
     Args:
         video_path (str): video pose path
-        ref_image (np.ndarray): reference image 
+        ref_image (np.ndarray): reference image
         sample_stride (int, optional): Defaults to 1.
+        graft (bool, optional): apply graft_pose_v2 retargeting (ref body/face
+            frozen, video arms+hands transplanted) + 15% head blend, matching
+            the jubail2 sign-language MimicMotion fork. Defaults to False
+            (exact original behavior).
 
     Returns:
         np.ndarray: sequence of video pose
@@ -54,6 +63,13 @@ def get_video_pose(
         detected_pose['bodies']['candidate'] = detected_pose['bodies']['candidate'] * a + b
         detected_pose['faces'] = detected_pose['faces'] * a + b
         detected_pose['hands'] = detected_pose['hands'] * a + b
+        if graft and detected_pose['bodies']['candidate'].shape[0] == 18:
+            # ref_pose is already in ref-image space; detected_pose was just
+            # rescaled into it, so grafting operates in one coordinate frame.
+            video_pose_transformed = copy.deepcopy(detected_pose)
+            detected_pose = graft_pose_v2(ref_pose, detected_pose)
+            detected_pose = blend_head_pose_only(detected_pose, video_pose_transformed,
+                                                 blend_ratio=head_blend_ratio)
         im = draw_pose(detected_pose, height, width)
         output_pose.append(np.array(im))
         body_point.append(detected_pose['bodies'])

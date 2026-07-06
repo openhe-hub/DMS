@@ -42,16 +42,10 @@ logger = logging.getLogger(__name__)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
-               kp_noise=0.0, kp_noise_seed=0, max_frames=None):
-    """preprocess ref image pose and video pose
-
-    Args:
-        video_path (str): input video pose path
-        image_path (str): reference image path
-        resolution (int, optional):  Defaults to 576.
-        sample_stride (int, optional): Defaults to 2.
-    """
+def load_ref_image(image_path, resolution=576):
+    """Load + resize/center-crop the reference image exactly as preprocess does.
+    Returns (image_pixels_hw3 uint8 numpy, ref_img (3,H,W) tensor in [0,1],
+    h_target, w_target)."""
     image_pixels = pil_loader(image_path)
     image_pixels = pil_to_tensor(image_pixels) # (c, h, w)
     h, w = image_pixels.shape[-2:]
@@ -74,19 +68,38 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
     ##################################### get video flow #################################################
     transform = transforms.Compose(
         [
-        
-        transforms.Resize((h_target, w_target), antialias=None), 
-        transforms.CenterCrop((h_target, w_target)), 
+
+        transforms.Resize((h_target, w_target), antialias=None),
+        transforms.CenterCrop((h_target, w_target)),
         transforms.ToTensor()
         ]
     )
-    
+
     ref_img = transform(PIL.Image.fromarray(image_pixels))
+    return image_pixels, ref_img, h_target, w_target
+
+
+def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
+               kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False):
+    """preprocess ref image pose and video pose
+
+    Args:
+        video_path (str): input video pose path
+        image_path (str): reference image path
+        resolution (int, optional):  Defaults to 576.
+        sample_stride (int, optional): Defaults to 2.
+        graft (bool, optional): apply graft_pose_v2 retargeting to the driving
+            poses (see mimicmotion/dwpose/graft.py). Affects BOTH the drawn
+            skeleton and the body/face point lists feeding the motion field,
+            so the DisPose control branch stays consistent with the skeleton.
+    """
+    image_pixels, ref_img, h_target, w_target = load_ref_image(image_path, resolution)
 
     ##################################### get image&video pose value #################################################
     image_pose, ref_point = get_image_pose(image_pixels)
     ref_point_body, ref_point_head = ref_point["bodies"], ref_point["faces"]
-    video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride)
+    video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride,
+                                                        graft=graft)
     body_point_list = [ref_point_body] + body_point
     face_point_list = [ref_point_head] + face_point
 
@@ -113,13 +126,31 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
                     _cand[_i, 1] += _rng.randn() * (kp_noise / h_target)
             body_point_list[_f]['candidate'] = _cand
 
-    dift_model = SDFeaturizer(sd_id = dift_model_path, weight_dtype=torch.float16)
-    category="human"
-    prompt = f'photo of a {category}'
-    dift_ref_img = (image_pixels / 255.0 - 0.5) *2
-    dift_ref_img = torch.from_numpy(dift_ref_img).to(device, torch.float16)
-    dift_feats = dift_model.forward(dift_ref_img, prompt=prompt, t=[261,0], up_ft_index=[1,2], ensemble_size=8)
+    val_controlnet_flow, val_controlnet_image, dift_feats, traj_flow = build_control(
+        image_pixels, ref_img, body_point_list, dift_model_path, h_target, w_target)
 
+    return torch.from_numpy(pose_pixels.copy()) / 127.5 - 1, torch.from_numpy(image_pixels) / 127.5 - 1, val_controlnet_flow, val_controlnet_image, body_point_list, dift_feats, traj_flow
+
+
+def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
+                  h_target, w_target, lite=False):
+    """Build DisPose control inputs (DIFT feats, motion-field traj_flow, CMP dense
+    flow) from an arbitrary body_point_list -- extracted from preprocess() so the
+    step-2 low-fps experiments can feed INTERPOLATED keypoint sequences through
+    the exact same control path. Call order (DIFT -> traj_flow -> CMP) preserved.
+
+    lite=True skips the GPU-heavy DIFT/CMP stages and returns the pre-CMP control
+    precursors instead -- used by the stride-1 equivalence check.
+
+    image_pixels: (1,3,H,W) numpy, 0-255. ref_img: (3,H,W) tensor in [0,1].
+    """
+    if not lite:
+        dift_model = SDFeaturizer(sd_id = dift_model_path, weight_dtype=torch.float16)
+        category="human"
+        prompt = f'photo of a {category}'
+        dift_ref_img = (image_pixels / 255.0 - 0.5) *2
+        dift_ref_img = torch.from_numpy(dift_ref_img).to(device, torch.float16)
+        dift_feats = dift_model.forward(dift_ref_img, prompt=prompt, t=[261,0], up_ft_index=[1,2], ensemble_size=8)
 
     model_length = len(body_point_list)
     traj_flow = points_to_flows(body_point_list, model_length, h_target, w_target)
@@ -128,15 +159,9 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
     for i in range(0, model_length-1):
         traj_flow[i] = cv2.filter2D(traj_flow[i], -1, blur_kernel)
 
-    traj_flow = rearrange(traj_flow, "f h w c -> f c h w") 
+    traj_flow = rearrange(traj_flow, "f h w c -> f c h w")
     traj_flow = torch.from_numpy(traj_flow)
     traj_flow = traj_flow.unsqueeze(0)
-
-    cmp = CMP(
-        './mimicmotion/modules/cmp/experiments/semiauto_annot/resnet50_vip+mpii_liteflow/config.yaml',
-        42000
-    ).to(device)
-    cmp.requires_grad_(False)
 
     pc, ph, pw = ref_img.shape
     poses, poses_subset = pose2track(body_point_list, ph, pw)
@@ -148,12 +173,24 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
     val_mask, val_first_frame_384, \
         val_sparse_optical_flow_384, val_mask_384 = sample_inputs_flow(ref_img.unsqueeze(0).float(), poses.unsqueeze(0), poses_subset.unsqueeze(0))
 
+    if lite:
+        return dict(traj_flow=traj_flow, controlnet_image=val_controlnet_image,
+                    sparse_flow=val_sparse_optical_flow, mask=val_mask,
+                    sparse_flow_384=val_sparse_optical_flow_384, mask_384=val_mask_384,
+                    first_frame_384=val_first_frame_384)
+
+    cmp = CMP(
+        './mimicmotion/modules/cmp/experiments/semiauto_annot/resnet50_vip+mpii_liteflow/config.yaml',
+        42000
+    ).to(device)
+    cmp.requires_grad_(False)
+
     fb, fl, fc, fh, fw = val_sparse_optical_flow.shape
 
     val_controlnet_flow = get_cmp_flow(
-        cmp, 
-        val_first_frame_384.unsqueeze(0).repeat(1, fl, 1, 1, 1).to(device), 
-        val_sparse_optical_flow_384.to(device), 
+        cmp,
+        val_first_frame_384.unsqueeze(0).repeat(1, fl, 1, 1, 1).to(device),
+        val_sparse_optical_flow_384.to(device),
         val_mask_384.to(device)
     )
 
@@ -162,10 +199,8 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
         val_controlnet_flow = F.interpolate(val_controlnet_flow.flatten(0, 1), (fh, fw), mode='nearest').reshape(fb, fl, 2, fh, fw)
         val_controlnet_flow[:, :, 0] *= scales[1]
         val_controlnet_flow[:, :, 1] *= scales[0]
-    
-    vis_flow = val_controlnet_flow[0]
 
-    return torch.from_numpy(pose_pixels.copy()) / 127.5 - 1, torch.from_numpy(image_pixels) / 127.5 - 1, val_controlnet_flow, val_controlnet_image, body_point_list, dift_feats, traj_flow
+    return val_controlnet_flow, val_controlnet_image, dift_feats, traj_flow
 
 
 def run_pipeline(pipeline, image_pixels, pose_pixels,
@@ -204,8 +239,9 @@ def main(args):
     for task in infer_config.test_case:
         ############################################## Pre-process data ##############################################
         pose_pixels, image_pixels, controlnet_flow, controlnet_image, point_list, dift_feats, traj_flow = preprocess(
-            task.ref_video_path, task.ref_image_path, infer_config.dift_model_path, 
-            resolution=task.resolution, sample_stride=task.sample_stride
+            task.ref_video_path, task.ref_image_path, infer_config.dift_model_path,
+            resolution=task.resolution, sample_stride=task.sample_stride,
+            graft=task.get("graft_pose", False)
         )
         ########################################### Run MimicMotion pipeline ###########################################
         _video_frames = run_pipeline(
