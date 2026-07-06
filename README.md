@@ -6,7 +6,7 @@ A research fork for controllable human video generation that combines three comp
 2. **DisPose** — training-free pose-guidance disentanglement layered on that backbone, turning a sparse skeleton into motion-field guidance + keypoint correspondence ([paper](https://arxiv.org/abs/2412.09349), arXiv:2412.09349).
 3. **SIREN / INR motion representation** — an exploration that grafts continuous, periodic-activation implicit neural representations ([SIREN paper](https://arxiv.org/abs/2006.09661), arXiv:2006.09661) onto DisPose's pose-trajectory / motion-field control signal. Code in `src/dispose_siren/` and `scripts/step{1,2,3}/`; motivation and pre-registered findings in `docs/idea/` and `docs/experiments/`.
 
-Downstream evaluations live under `docs/experiments/` and are interchangeable — e.g. a sign- and hand-fidelity stress test (`docs/experiments/sign_comparison/`, with `qualitative.md` + `quantitative.md`) on ASL50K is one such experiment and can be swapped for other downstream datasets.
+Downstream evaluations live under `docs/experiments/` and are interchangeable — e.g. a sign- and hand-fidelity stress test (`docs/experiments/baseline/`, with `qualitative.md` + `quantitative.md`) on ASL50K is one such experiment and can be swapped for other downstream datasets.
 
 > **Primary references:** DisPose (Li et al., ICLR 2025) and SIREN (Sitzmann et al., NeurIPS 2020) — full BibTeX under [Citation](#-citation).
 
