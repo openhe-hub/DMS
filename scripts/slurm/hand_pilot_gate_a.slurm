@@ -18,7 +18,7 @@
 #   MODE=off|raw|smooth : one paired generation arm (8 cases, ~2.5-3 h).
 #   MODE=inspect : DWPose over the generated mp4s (42 --stage extract).
 set -euo pipefail
-MODE=${1:?check|off|raw|smooth|inspect}
+MODE=${1:?check|off|raw|smooth|siren|inspect}
 
 BASE=/scratch/zl6890/zhewen
 REPO=$BASE/DisPose

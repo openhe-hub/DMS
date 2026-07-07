@@ -52,6 +52,8 @@ ARMS = {
     "off": "",
     "raw": "    hand_flow: true\n",
     "smooth": "    hand_flow: true\n    hand_flow_smooth: 1.5\n",
+    "siren": ("    hand_flow: true\n"
+              "    hand_recon_dir: ./outputs/hand_pilot/hands_recon\n"),
 }
 
 

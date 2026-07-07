@@ -84,7 +84,7 @@ def load_ref_image(image_path, resolution=576):
 def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
                kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False,
                hand_flow=False, hand_flow_smooth=0.0, hand_conf_thr=0.3,
-               hand_kp_subset="all"):
+               hand_kp_subset="all", hand_recon_dir=""):
     """preprocess ref image pose and video pose
 
     Args:
@@ -109,6 +109,10 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
         hand_kp_subset (str, optional): "all" (21/hand) or "tips"
             (wrist+fingertips, 6/hand) -- coarse fallback if 42 clustered
             points saturate the blurred traj_flow.
+        hand_recon_dir (str, optional): directory of {clip}.npz reconstructed
+            hand trajectories (43_reconstruct_hands); substituted for the
+            detected hands before rescale/graft -- the SIREN arm of the
+            three-system comparison. Requires hand_flow=True.
     """
     image_pixels, ref_img, h_target, w_target = load_ref_image(image_path, resolution)
 
@@ -116,9 +120,17 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
     image_pose, ref_point = get_image_pose(image_pixels)
     ref_point_body, ref_point_head = ref_point["bodies"], ref_point["faces"]
     if hand_flow:
+        hand_override = None
+        if hand_recon_dir:
+            clip = os.path.splitext(os.path.basename(video_path))[0]
+            rp = os.path.join(hand_recon_dir, f"{clip}.npz")
+            z = np.load(rp)
+            hand_override = dict(hands=z["hands"], hands_score=z["hands_score"])
+            logger.info(f"hand_recon override: {rp} "
+                        f"(covered {z['covered'].mean():.0%})")
         video_pose, body_point, face_point, hand_point = get_video_pose(
             video_path, image_pixels, sample_stride=sample_stride, graft=graft,
-            return_hands=True)
+            return_hands=True, hand_override=hand_override)
     else:
         video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride,
                                                             graft=graft)
@@ -285,7 +297,8 @@ def main(args):
             hand_flow=task.get("hand_flow", False),
             hand_flow_smooth=task.get("hand_flow_smooth", 0.0),
             hand_conf_thr=task.get("hand_conf_thr", 0.3),
-            hand_kp_subset=task.get("hand_kp_subset", "all")
+            hand_kp_subset=task.get("hand_kp_subset", "all"),
+            hand_recon_dir=task.get("hand_recon_dir", "")
         )
         ########################################### Run MimicMotion pipeline ###########################################
         _video_frames = run_pipeline(

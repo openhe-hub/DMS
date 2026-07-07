@@ -15,7 +15,8 @@ def get_video_pose(
         sample_stride: int=1,
         graft: bool=False,
         head_blend_ratio: float=0.15,
-        return_hands: bool=False):
+        return_hands: bool=False,
+        hand_override=None):
     """preprocess ref image pose and video pose
 
     Args:
@@ -31,6 +32,13 @@ def get_video_pose(
             i.e. the same coordinates the drawn skeleton uses) for the
             hand_flow motion-field channel. Defaults to False (original
             3-tuple return).
+        hand_override (dict, optional): {'hands': [T,2,21,2],
+            'hands_score': [T,2,21]} in SOURCE-video normalized coords (e.g.
+            SIREN-reconstructed trajectories from 43_reconstruct_hands).
+            Substituted for the person-0 detected hands BEFORE rescale/graft,
+            so they flow through the exact same coordinate chain. Only the
+            motion field consumes them when combined with return_hands; the
+            drawn skeleton also uses them (control stays self-consistent).
 
     Returns:
         np.ndarray: sequence of video pose
@@ -67,7 +75,18 @@ def get_video_pose(
     body_point = []
     face_point = []
     hand_point = []
-    for detected_pose in detected_poses:
+    for fi, detected_pose in enumerate(detected_poses):
+        if hand_override is not None and fi < len(hand_override['hands']):
+            hnds = np.asarray(detected_pose['hands'])
+            if hnds.shape[0] >= 2:
+                nums = hnds.shape[0] // 2
+                hnds[0] = hand_override['hands'][fi, 0]      # person-0 left
+                hnds[nums] = hand_override['hands'][fi, 1]   # person-0 right
+                detected_pose['hands'] = hnds
+                hsc = np.asarray(detected_pose['hands_score'])
+                hsc[0] = hand_override['hands_score'][fi, 0]
+                hsc[nums] = hand_override['hands_score'][fi, 1]
+                detected_pose['hands_score'] = hsc
         detected_pose['bodies']['candidate'] = detected_pose['bodies']['candidate'] * a + b
         detected_pose['faces'] = detected_pose['faces'] * a + b
         detected_pose['hands'] = detected_pose['hands'] * a + b
