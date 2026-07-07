@@ -26,7 +26,7 @@ import numpy as np
 
 import _paths as P
 
-ARMS = ("off", "raw", "smooth")
+ARMS = ("off", "raw", "smooth")  # default; override with --arms
 
 
 def find_runs(arm):
@@ -104,7 +104,7 @@ def fastest_frames(src_poses, k=6):
     return sorted(picked)
 
 
-def stage_report():
+def stage_report(arms=ARMS, tag=""):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -114,19 +114,19 @@ def stage_report():
     from motion_fidelity import motion_fidelity_metrics
     from dispose_siren.hand_traj import load_poses
 
-    runs = {arm: find_runs(arm) for arm in ARMS}
+    runs = {arm: find_runs(arm) for arm in arms}
     clips = sorted(set.intersection(*(set(r) for r in runs.values())))
     if not clips:
         raise SystemExit("no complete off/raw/smooth triplets under gate_a/")
-    out_dir = os.path.join(P.GATE_A_DIR, "inspect")
+    out_dir = os.path.join(P.GATE_A_DIR, "inspect" + (f"_{tag}" if tag else ""))
     os.makedirs(out_dir, exist_ok=True)
 
     rows = []
     for clip in clips:
         src = load_poses(os.path.join(P.POSES_DIR, f"{clip}.npz"))
         ts = fastest_frames(src)
-        fig, ax = plt.subplots(len(ARMS) + 1, len(ts),
-                               figsize=(2 * len(ts), 2 * (len(ARMS) + 1)),
+        fig, ax = plt.subplots(len(arms) + 1, len(ts),
+                               figsize=(2 * len(ts), 2 * (len(arms) + 1)),
                                squeeze=False)
         src_mp4 = os.path.join(P.REPO, "assets/example_data/sign_videos/"
                                f"hard27k_orig/{clip}.mp4")
@@ -139,7 +139,7 @@ def stage_report():
                 ax[0][c].imshow(crop(img, *w))
             ax[0][c].set_title(f"src t={t}", fontsize=7)
         row = {"clip": clip}
-        for r, arm in enumerate(ARMS, start=1):
+        for r, arm in enumerate(arms, start=1):
             mp4 = runs[arm][clip]
             gp = load_poses(mp4 + ".poses.npz")
             gf = read_frames(mp4, ts)
@@ -168,14 +168,15 @@ def stage_report():
         print(f"  {clip}: sheet + diagnostics done", flush=True)
 
     md = ["# Gate A diagnostics (paired, per case)", "",
-          "| clip | metric | off | raw | smooth |", "|---|---|---|---|---|"]
+          "| clip | metric | " + " | ".join(arms) + " |",
+          "|---|---|" + "---|" * len(arms)]
     for row in rows:
         for k in ("mean_hand_conf", "hand_good_rate", "hand_nme", "body_nme"):
             md.append(f"| {row['clip']} | {k} | "
-                      + " | ".join(f"{row[a][k]:.4f}" for a in ARMS) + " |")
-    with open(os.path.join(P.GATE_A_DIR, "report.md"), "w") as f:
+                      + " | ".join(f"{row[a][k]:.4f}" for a in arms) + " |")
+    with open(os.path.join(P.GATE_A_DIR, f"report{('_' + tag) if tag else ''}.md"), "w") as f:
         f.write("\n".join(md) + "\n")
-    json.dump(rows, open(os.path.join(P.GATE_A_DIR, "diagnostics.json"), "w"),
+    json.dump(rows, open(os.path.join(P.GATE_A_DIR, f"diagnostics{('_' + tag) if tag else ''}.json"), "w"),
               indent=1, default=float)
     print(f"-> {out_dir}/*_sheet.png + gate_a/report.md\n"
           "Verdict is visual: consistent hand-region change on >= half the "
@@ -185,5 +186,10 @@ def stage_report():
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--stage", choices=("extract", "report"), required=True)
+    ap.add_argument("--arms", default=",".join(ARMS))
+    ap.add_argument("--tag", default="")
     a = ap.parse_args()
-    stage_extract() if a.stage == "extract" else stage_report()
+    if a.stage == "extract":
+        stage_extract()
+    else:
+        stage_report(arms=tuple(a.arms.split(",")), tag=a.tag)
