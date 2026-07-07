@@ -84,7 +84,7 @@ def load_ref_image(image_path, resolution=576):
 def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
                kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False,
                hand_flow=False, hand_flow_smooth=0.0, hand_conf_thr=0.3,
-               hand_kp_subset="all", hand_recon_dir=""):
+               hand_kp_subset="all", hand_recon_dir="", hand_flow_gain=1.0):
     """preprocess ref image pose and video pose
 
     Args:
@@ -179,13 +179,13 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
 
     val_controlnet_flow, val_controlnet_image, dift_feats, traj_flow = build_control(
         image_pixels, ref_img, flow_point_list, dift_model_path, h_target, w_target,
-        n_points=flow_n_points)
+        n_points=flow_n_points, hand_gain=hand_flow_gain)
 
     return torch.from_numpy(pose_pixels.copy()) / 127.5 - 1, torch.from_numpy(image_pixels) / 127.5 - 1, val_controlnet_flow, val_controlnet_image, body_point_list, dift_feats, traj_flow
 
 
 def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
-                  h_target, w_target, lite=False, n_points=18):
+                  h_target, w_target, lite=False, n_points=18, hand_gain=1.0):
     """Build DisPose control inputs (DIFT feats, motion-field traj_flow, CMP dense
     flow) from an arbitrary body_point_list -- extracted from preprocess() so the
     step-2 low-fps experiments can feed INTERPOLATED keypoint sequences through
@@ -205,7 +205,15 @@ def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
         dift_feats = dift_model.forward(dift_ref_img, prompt=prompt, t=[261,0], up_ft_index=[1,2], ensemble_size=8)
 
     model_length = len(body_point_list)
-    traj_flow = points_to_flows(body_point_list, model_length, h_target, w_target, n_points=n_points)
+    # hand_gain amplifies ONLY the appended hand points' displacement in
+    # traj_flow (gain ablation: is the ControlNet sensitive to this channel
+    # at all?); body rows and the CMP sparse branch stay untouched.
+    point_gain = None
+    if n_points > 18 and hand_gain != 1.0:
+        point_gain = np.concatenate([np.ones(18),
+                                     np.full(n_points - 18, hand_gain)])
+    traj_flow = points_to_flows(body_point_list, model_length, h_target, w_target, n_points=n_points,
+                                point_gain=point_gain)
     blur_kernel = bivariate_Gaussian(kernel_size=199, sig_x=20, sig_y=20, theta=0, grid=None, isotropic=True)
 
     for i in range(0, model_length-1):
@@ -298,7 +306,8 @@ def main(args):
             hand_flow_smooth=task.get("hand_flow_smooth", 0.0),
             hand_conf_thr=task.get("hand_conf_thr", 0.3),
             hand_kp_subset=task.get("hand_kp_subset", "all"),
-            hand_recon_dir=task.get("hand_recon_dir", "")
+            hand_recon_dir=task.get("hand_recon_dir", ""),
+            hand_flow_gain=task.get("hand_flow_gain", 1.0)
         )
         ########################################### Run MimicMotion pipeline ###########################################
         _video_frames = run_pipeline(

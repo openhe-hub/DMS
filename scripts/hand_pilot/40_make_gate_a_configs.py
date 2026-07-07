@@ -54,6 +54,8 @@ ARMS = {
     "smooth": "    hand_flow: true\n    hand_flow_smooth: 1.5\n",
     "siren": ("    hand_flow: true\n"
               "    hand_recon_dir: ./outputs/hand_pilot/hands_recon\n"),
+    "gain3": "    hand_flow: true\n    hand_flow_gain: 3.0\n",
+    "gain10": "    hand_flow: true\n    hand_flow_gain: 10.0\n",
 }
 
 
@@ -63,10 +65,16 @@ def main():
                     default=os.path.join(P.GATE_B_DIR, "case_ranking.csv"))
     ap.add_argument("--n_extra", type=int, default=3)
     ap.add_argument("--out_dir", default=os.path.join(P.REPO, "configs"))
+    ap.add_argument("--arms", default="",
+                    help="comma list; default = all ARMS")
+    ap.add_argument("--clips", default="",
+                    help="comma list of clip ids overriding case selection")
     args = ap.parse_args()
 
     cases = list(BASE_CASES)
-    if os.path.exists(args.ranking):
+    if args.clips:
+        cases = args.clips.split(",")
+    elif os.path.exists(args.ranking):
         with open(args.ranking) as f:
             ranked = [r["clip"] for r in csv.DictReader(f)]
         extra = [c for c in ranked if c not in cases][:args.n_extra]
@@ -76,7 +84,9 @@ def main():
         print(f"WARNING: {args.ranking} not found -- run 31_gate_b_noise.py "
               f"first; emitting the {len(cases)} base cases only")
 
-    for arm, hand_fields in ARMS.items():
+    arms = args.arms.split(",") if args.arms else list(ARMS)
+    for arm in arms:
+        hand_fields = ARMS[arm]
         path = os.path.join(args.out_dir, f"test_sign_handflow_{arm}.yaml")
         with open(path, "w") as f:
             f.write(HEADER.format(arm=arm, ncases=len(cases)))

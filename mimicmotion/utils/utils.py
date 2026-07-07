@@ -175,13 +175,16 @@ def points_to_flows_batch(points_list, model_length, height, width, batch_size):
                     input_drag[batch_idx][i][int(start_point[1])][int(start_point[0])][1] = end_point[1] - start_point[1]
     return input_drag
 
-def points_to_flows(points_list, model_length, height, width, n_points=18):
-
+def points_to_flows(points_list, model_length, height, width, n_points=18,
+                    point_gain=None):
+    # point_gain (n_points,) scales each point's written displacement --
+    # hand_flow_gain ablation knob; None keeps original behavior bit-exact.
     track_points, track_points_subsets = pose2track(points_list, height, width, n_points=n_points)
     # model_length = track_points.shape[1]
     input_drag = np.zeros((model_length - 1, height, width, 2))
 
-    for splited_track, points_subset in zip(track_points, track_points_subsets):
+    for pt_i, (splited_track, points_subset) in enumerate(zip(track_points, track_points_subsets)):
+        gain = 1.0 if point_gain is None else float(point_gain[pt_i])
         if len(splited_track) == 1: # stationary point
             displacement_point = tuple([splited_track[0][0] + 1, splited_track[0][1] + 1])
             splited_track = tuple([splited_track[0], displacement_point])
@@ -194,8 +197,8 @@ def points_to_flows(points_list, model_length, height, width, n_points=18):
             if points_subset[i]!=-1:
                 start_point = splited_track[i]
                 end_point = splited_track[i+1]
-                input_drag[i][int(start_point[1])][int(start_point[0])][0] = end_point[0] - start_point[0]
-                input_drag[i][int(start_point[1])][int(start_point[0])][1] = end_point[1] - start_point[1]
+                input_drag[i][int(start_point[1])][int(start_point[0])][0] = gain * (end_point[0] - start_point[0])
+                input_drag[i][int(start_point[1])][int(start_point[0])][1] = gain * (end_point[1] - start_point[1])
     return input_drag
 
 def interpolate_trajectory(points, n_points):
