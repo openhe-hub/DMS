@@ -33,6 +33,8 @@ from constants import ASPECT_RATIO
 from mimicmotion.utils.loader import create_ctrl_pipeline
 from mimicmotion.utils.utils import save_to_mp4
 from mimicmotion.dwpose.preprocess import get_video_pose, get_image_pose
+from mimicmotion.dwpose.hand_control import (append_hands_to_point_list,
+                                             smooth_hands, person0_hands)
 from mimicmotion.modules.cmp_model import CMP
 
 
@@ -80,7 +82,9 @@ def load_ref_image(image_path, resolution=576):
 
 
 def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
-               kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False):
+               kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False,
+               hand_flow=False, hand_flow_smooth=0.0, hand_conf_thr=0.3,
+               hand_kp_subset="all"):
     """preprocess ref image pose and video pose
 
     Args:
@@ -92,14 +96,32 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
             poses (see mimicmotion/dwpose/graft.py). Affects BOTH the drawn
             skeleton and the body/face point lists feeding the motion field,
             so the DisPose control branch stays consistent with the skeleton.
+        hand_flow (bool, optional): append the DWPose hand keypoints (post
+            rescale/graft, person 0) to the point list feeding the motion
+            field (traj_flow + CMP sparse flow). The skeleton image and the
+            point_list returned for the DIFT/point-adapter branch stay
+            body-18. Defaults to False (exact original behavior).
+        hand_flow_smooth (float, optional): sigma (frames) of a confidence-
+            weighted temporal Gaussian over the injected hand keypoints;
+            0 = raw detections.
+        hand_conf_thr (float, optional): hand keypoints below this confidence
+            are marked invisible (subset=-1) in the motion field.
+        hand_kp_subset (str, optional): "all" (21/hand) or "tips"
+            (wrist+fingertips, 6/hand) -- coarse fallback if 42 clustered
+            points saturate the blurred traj_flow.
     """
     image_pixels, ref_img, h_target, w_target = load_ref_image(image_path, resolution)
 
     ##################################### get image&video pose value #################################################
     image_pose, ref_point = get_image_pose(image_pixels)
     ref_point_body, ref_point_head = ref_point["bodies"], ref_point["faces"]
-    video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride,
-                                                        graft=graft)
+    if hand_flow:
+        video_pose, body_point, face_point, hand_point = get_video_pose(
+            video_path, image_pixels, sample_stride=sample_stride, graft=graft,
+            return_hands=True)
+    else:
+        video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride,
+                                                            graft=graft)
     body_point_list = [ref_point_body] + body_point
     face_point_list = [ref_point_head] + face_point
 
@@ -126,14 +148,32 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
                     _cand[_i, 1] += _rng.randn() * (kp_noise / h_target)
             body_point_list[_f]['candidate'] = _cand
 
+    # ---- hand_flow: a separate hand-augmented point list feeds ONLY the
+    # motion field; body_point_list (returned as point_list for the DIFT /
+    # point-adapter branch) stays body-18.
+    flow_point_list, flow_n_points = body_point_list, 18
+    if hand_flow:
+        if hand_flow_smooth and hand_flow_smooth > 0:
+            # smooth video frames only, then prepend the static ref frame, so
+            # the reference hand cannot bleed into t=0
+            hand_point = smooth_hands(hand_point, hand_flow_smooth)
+        ref_h, ref_s = person0_hands(ref_point)  # ref_pose is already in ref space
+        hand_list = [dict(hands=ref_h, hands_score=ref_s)] + hand_point
+        if max_frames is not None:
+            hand_list = hand_list[:max_frames]
+        flow_point_list, flow_n_points = append_hands_to_point_list(
+            body_point_list, hand_list, conf_thr=hand_conf_thr,
+            kp_subset=hand_kp_subset)
+
     val_controlnet_flow, val_controlnet_image, dift_feats, traj_flow = build_control(
-        image_pixels, ref_img, body_point_list, dift_model_path, h_target, w_target)
+        image_pixels, ref_img, flow_point_list, dift_model_path, h_target, w_target,
+        n_points=flow_n_points)
 
     return torch.from_numpy(pose_pixels.copy()) / 127.5 - 1, torch.from_numpy(image_pixels) / 127.5 - 1, val_controlnet_flow, val_controlnet_image, body_point_list, dift_feats, traj_flow
 
 
 def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
-                  h_target, w_target, lite=False):
+                  h_target, w_target, lite=False, n_points=18):
     """Build DisPose control inputs (DIFT feats, motion-field traj_flow, CMP dense
     flow) from an arbitrary body_point_list -- extracted from preprocess() so the
     step-2 low-fps experiments can feed INTERPOLATED keypoint sequences through
@@ -153,7 +193,7 @@ def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
         dift_feats = dift_model.forward(dift_ref_img, prompt=prompt, t=[261,0], up_ft_index=[1,2], ensemble_size=8)
 
     model_length = len(body_point_list)
-    traj_flow = points_to_flows(body_point_list, model_length, h_target, w_target)
+    traj_flow = points_to_flows(body_point_list, model_length, h_target, w_target, n_points=n_points)
     blur_kernel = bivariate_Gaussian(kernel_size=199, sig_x=20, sig_y=20, theta=0, grid=None, isotropic=True)
 
     for i in range(0, model_length-1):
@@ -164,7 +204,7 @@ def build_control(image_pixels, ref_img, body_point_list, dift_model_path,
     traj_flow = traj_flow.unsqueeze(0)
 
     pc, ph, pw = ref_img.shape
-    poses, poses_subset = pose2track(body_point_list, ph, pw)
+    poses, poses_subset = pose2track(body_point_list, ph, pw, n_points=n_points)
     poses = torch.from_numpy(poses).permute(1,0,2)
     poses_subset = torch.from_numpy(poses_subset).permute(1,0,2)
 
@@ -241,7 +281,11 @@ def main(args):
         pose_pixels, image_pixels, controlnet_flow, controlnet_image, point_list, dift_feats, traj_flow = preprocess(
             task.ref_video_path, task.ref_image_path, infer_config.dift_model_path,
             resolution=task.resolution, sample_stride=task.sample_stride,
-            graft=task.get("graft_pose", False)
+            graft=task.get("graft_pose", False),
+            hand_flow=task.get("hand_flow", False),
+            hand_flow_smooth=task.get("hand_flow_smooth", 0.0),
+            hand_conf_thr=task.get("hand_conf_thr", 0.3),
+            hand_kp_subset=task.get("hand_kp_subset", "all")
         )
         ########################################### Run MimicMotion pipeline ###########################################
         _video_frames = run_pipeline(

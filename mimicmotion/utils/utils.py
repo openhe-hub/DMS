@@ -8,7 +8,10 @@ import numpy as np
 import pdb
 import torch
 import torch.nn.functional as F
-from torchvision.io import write_video
+try:
+    from torchvision.io import write_video
+except ImportError:  # removed in newer torchvision; only save_to_mp4 needs it
+    write_video = None
 
 logger = logging.getLogger(__name__)
 
@@ -112,12 +115,14 @@ def sample_inputs_flow(first_frame, poses, poses_subset):
 
     return controlnet_image, sparse_optical_flow, mask, first_frame_384, sparse_optical_flow_384, mask_384
 
-def pose2track(points_list, height, width):
-    track_points = np.zeros((18, len(points_list), 2)) # 18 x f x 2
-    track_points_subsets = np.zeros((18, len(points_list), 1)) # 18 x f x 2
+def pose2track(points_list, height, width, n_points=18):
+    # n_points=18 keeps the original body-only behavior bit-exact; the hand_flow
+    # path passes 18+2k point lists (person-0 body + hand keypoints appended).
+    track_points = np.zeros((n_points, len(points_list), 2)) # K x f x 2
+    track_points_subsets = np.zeros((n_points, len(points_list), 1)) # K x f x 1
     for f in range(len(points_list)):
         candidates, subsets, scores = points_list[f]['candidate'], points_list[f]['subset'][0], points_list[f]['score']
-        for i in range(18):
+        for i in range(n_points):
             if subsets[i] == -1:
                 track_points_subsets[i][f] = -1
             else:
@@ -170,9 +175,9 @@ def points_to_flows_batch(points_list, model_length, height, width, batch_size):
                     input_drag[batch_idx][i][int(start_point[1])][int(start_point[0])][1] = end_point[1] - start_point[1]
     return input_drag
 
-def points_to_flows(points_list, model_length, height, width):
-    
-    track_points, track_points_subsets = pose2track(points_list, height, width)
+def points_to_flows(points_list, model_length, height, width, n_points=18):
+
+    track_points, track_points_subsets = pose2track(points_list, height, width, n_points=n_points)
     # model_length = track_points.shape[1]
     input_drag = np.zeros((model_length - 1, height, width, 2))
 

@@ -7,13 +7,15 @@ import numpy as np
 from .util import draw_pose
 from .dwpose_detector import dwpose_detector as dwprocessor
 from .graft import graft_pose_v2, blend_head_pose_only
+from .hand_control import person0_hands
 
 def get_video_pose(
         video_path: str,
         ref_image: np.ndarray,
         sample_stride: int=1,
         graft: bool=False,
-        head_blend_ratio: float=0.15):
+        head_blend_ratio: float=0.15,
+        return_hands: bool=False):
     """preprocess ref image pose and video pose
 
     Args:
@@ -24,6 +26,11 @@ def get_video_pose(
             frozen, video arms+hands transplanted) + 15% head blend, matching
             the jubail2 sign-language MimicMotion fork. Defaults to False
             (exact original behavior).
+        return_hands (bool, optional): additionally return the per-frame
+            person-0 hand keypoints + confidences (post-rescale, post-graft,
+            i.e. the same coordinates the drawn skeleton uses) for the
+            hand_flow motion-field channel. Defaults to False (original
+            3-tuple return).
 
     Returns:
         np.ndarray: sequence of video pose
@@ -56,9 +63,10 @@ def get_video_pose(
     a = np.array([ax, ay])
     b = np.array([bx, by])
     output_pose = []
-    # pose rescale 
+    # pose rescale
     body_point = []
     face_point = []
+    hand_point = []
     for detected_pose in detected_poses:
         detected_pose['bodies']['candidate'] = detected_pose['bodies']['candidate'] * a + b
         detected_pose['faces'] = detected_pose['faces'] * a + b
@@ -74,6 +82,11 @@ def get_video_pose(
         output_pose.append(np.array(im))
         body_point.append(detected_pose['bodies'])
         face_point.append(detected_pose['faces'])
+        if return_hands:
+            h, s = person0_hands(detected_pose)
+            hand_point.append(dict(hands=h, hands_score=s))
+    if return_hands:
+        return np.stack(output_pose), body_point, face_point, hand_point
     return np.stack(output_pose), body_point, face_point
 
 
