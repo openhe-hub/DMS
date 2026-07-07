@@ -33,7 +33,11 @@ def extract_video_poses(video_path, sample_stride=1, max_frames=None):
     Keys:
         body        [N, 18, 2]   (NaN if frame has no person)
         body_score  [N, 18]      (NaN if no person)
-        hands       [N, 2, 21, 2]  hand 0 = right, 1 = left  (NaN if no person)
+        hands       [N, 2, 21, 2]  hand 0 = LEFT, 1 = RIGHT  (NaN if no person)
+                    (COCO-WholeBody slicing order; verified against DWPose's
+                    own body wrists on 3 hard27k clips, median dist 0.01 to
+                    the matching wrist vs 0.13+ to the other -- see
+                    hand_traj.verify_hand_order / job 16540596)
         hands_score [N, 2, 21]     (NaN if no person)
         detected    [N] bool       True where a person was found
     """
