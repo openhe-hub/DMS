@@ -100,7 +100,14 @@ def train_hand_model(W, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,
 
     m = HandSetSIREN(**(model_cfg or {})).to(device)
     opt = torch.optim.Adam(m.parameters(), lr, weight_decay=weight_decay)
-    sch = torch.optim.lr_scheduler.CosineAnnealingLR(opt, epochs)
+    # linear warmup then cosine: without warmup, Adam+transformer diverges on
+    # some seeds (observed: seed-0 scaling runs collapsed to train_loss ~1.5)
+    warm = max(1, int(0.05 * epochs))
+    sch = torch.optim.lr_scheduler.SequentialLR(
+        opt,
+        [torch.optim.lr_scheduler.LinearLR(opt, 0.05, 1.0, warm),
+         torch.optim.lr_scheduler.CosineAnnealingLR(opt, epochs - warm)],
+        milestones=[warm])
     bs = min(batch_size, S)
     hist = []
 

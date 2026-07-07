@@ -89,8 +89,9 @@ def main():
     sizes = [len(train_clips) if s == "all" else int(s)
              for s in args.sizes.split(",")]
     for size in sizes:
-        n_seeds = 1 if size >= len(train_clips) else args.seeds
-        for seed in range(n_seeds):
+        # full-size runs share the same clips but still get all seeds --
+        # they differ in init/aug stream, and the top point anchors the fit
+        for seed in range(args.seeds):
             rng = np.random.RandomState(1000 + seed)
             sub = (train_clips if size >= len(train_clips)
                    else list(rng.choice(train_clips, size, replace=False)))
