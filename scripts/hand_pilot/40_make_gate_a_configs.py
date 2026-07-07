@@ -69,10 +69,19 @@ def main():
                     help="comma list; default = all ARMS")
     ap.add_argument("--clips", default="",
                     help="comma list of clip ids overriding case selection")
+    ap.add_argument("--all", action="store_true",
+                    help="all 109 clips (from the extracted poses dir)")
+    ap.add_argument("--shards", type=int, default=1,
+                    help="split the case list into N per-shard yamls "
+                         "(suffix _full_{k}) to fit slurm time limits")
     args = ap.parse_args()
 
     cases = list(BASE_CASES)
-    if args.clips:
+    if args.all:
+        import glob as _g
+        cases = sorted(os.path.splitext(os.path.basename(p))[0]
+                       for p in _g.glob(os.path.join(P.POSES_DIR, "*.npz")))
+    elif args.clips:
         cases = args.clips.split(",")
     elif os.path.exists(args.ranking):
         with open(args.ranking) as f:
@@ -87,13 +96,19 @@ def main():
     arms = args.arms.split(",") if args.arms else list(ARMS)
     for arm in arms:
         hand_fields = ARMS[arm]
-        path = os.path.join(args.out_dir, f"test_sign_handflow_{arm}.yaml")
-        with open(path, "w") as f:
-            f.write(HEADER.format(arm=arm, ncases=len(cases)))
-            for clip in cases:
-                f.write(CASE.format(video_dir=VIDEO_DIR, ref_image=REF_IMAGE,
-                                    clip=clip, hand_fields=hand_fields))
-        print(f"wrote {path} ({len(cases)} cases)")
+        shards = ([cases] if args.shards <= 1 else
+                  [cases[k::args.shards] for k in range(args.shards)])
+        for k, shard in enumerate(shards):
+            suffix = f"_{arm}" if args.shards <= 1 else f"_{arm}_full_{k}"
+            path = os.path.join(args.out_dir,
+                                f"test_sign_handflow{suffix}.yaml")
+            with open(path, "w") as f:
+                f.write(HEADER.format(arm=arm, ncases=len(shard)))
+                for clip in shard:
+                    f.write(CASE.format(video_dir=VIDEO_DIR,
+                                        ref_image=REF_IMAGE, clip=clip,
+                                        hand_fields=hand_fields))
+            print(f"wrote {path} ({len(shard)} cases)")
 
 
 if __name__ == "__main__":
