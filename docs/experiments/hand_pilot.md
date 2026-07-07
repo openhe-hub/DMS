@@ -108,6 +108,41 @@ slope halves as data grows, the crossing stays ≈ 26 k < 50 k.
 Figures: `outputs/hand_pilot/fig/{scaling,gap_inpaint}.png`,
 decision JSON: `outputs/hand_pilot/decision.json`.
 
+### 3.2b P0-crush — memorization ceiling: **baselines crushed**
+
+User-requested reframing: the pilot's real deliverable is the three-system
+video comparison (MimicMotion vs DisPose+graft vs DisPose+graft+SIREN) with
+deliberate train=test overfit as a ceiling demo; pose-level baselines are the
+component gate the SIREN trajectories must pass before injection.
+
+First finding (honest): the smooth-target P0 checkpoint LOST the protocols on
+its own training windows (holdout 5.6×, gaps 10–20× behind spline) — it was
+trained on a single fixed observation pattern and never exercised retrieval.
+Crush config: raw-detection targets, protocol-matched obs patterns
+(even-frame 0.25 / gaps→16 0.5), xl model (d256/enc5/H256, ~5.5 M), 4000 ep.
+
+Result (train windows, jobs 16542587 v1 / **16543899 v2**):
+
+| gap len | spline | learned | ratio |
+|---|---|---|---|
+| 2 | 0.0286 | 0.0181 | 1.6× |
+| 5 | 0.1970 | 0.0312 | 6.3× |
+| 9 | 0.3089 | 0.0304 | 10.2× |
+| 14 | 1.3834 | 0.0383 | **36.2×** |
+| 16 | 1.0805 | 0.0563 | 19.2× |
+
+Learned error is nearly FLAT in gap length (recall, not interpolation);
+spline explodes — and real dropout gaps run to p90 = 48 frames. Holdout:
+learned 0.0235 vs spline 0.0287 (ahead 1.2×; both noise-floor-capped —
+structural, documented). Component gate: **PASS, decisively.**
+
+### 3.2c SIREN arm wiring
+`43_reconstruct_hands.py` (span-32/stride-16 sliding reconstruction,
+triangular blending, gap frames conf-floored to 0.61 so they become usable
+control), `get_video_pose(hand_override)` substitutes person-0 hands BEFORE
+rescale/graft, `hand_recon_dir` yaml field. Three-system comparison needs
+only the new arm generated — both baselines' 109-case outputs exist.
+
 ### 3.3 Decision
 Pre-registered: asl50k justified iff slope < −0.05 AND extrapolated spline
 crossing < 50k clips AND Gate A live. **Slope/crossing: PASS. Gate A: awaiting
