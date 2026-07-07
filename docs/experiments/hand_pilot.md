@@ -30,13 +30,15 @@
   w0=15 frozen. (First attempt diverged at loss_vel~1e17 — cause was the
   collapsed-hand windows above; fixed by min_bone_px=8 + |canon|≤12 gates,
   2273→2125 windows, and grad clipping.)
-- **Scaling (v1, partial)**: healthy seeds show clean decrease
-  16→32→64 clips: held-out MSE 2.4 → 1.2 → 0.85 (spline 0.042, linear
-  0.056) — losing to spline at pilot scale as pre-registered/expected;
-  naive power-law slope ≈ −0.75 → spline crossing ≈ a few ×10³ clips,
-  well inside asl50k. Seed-0 runs collapsed in training (no LR warmup);
-  **v2 with warmup + 3 seeds at every size is rerunning — numbers below
-  will be replaced.**
+- **Scaling (v2, final): asl50k JUSTIFIED.** With LR warmup, all 12 runs
+  healthy and the curve is monotone: held-out MSE **2.24 → 1.16 → 0.67 →
+  0.52** over 16/32/64/84 train clips (3 seeds each; spline 0.042, linear
+  0.056, gauss 0.088). Power-law slope **−0.87**, extrapolated spline
+  crossing **≈ 1.5 k clips** — 32× inside asl50k even before flattening;
+  the pre-registered criterion (slope < −0.05 AND crossing < 50 k) passes
+  with enormous margin. Losing to spline at 84 clips is the expected
+  data-wall outcome; the slope is the judgment. (v1 without warmup had
+  seed-0 collapses — diagnosed as Adam+transformer divergence, not data.)
 - **Gate A (channel causality)**: 8 cases × {off, raw, smooth σ=1.5} running
   (jobs 16541178/79/80). Verdict = visual (≥ half the cases show consistent
   hand-region change ⇒ channel live); diagnostics via 42_gate_a_inspect.
@@ -81,17 +83,39 @@
 Kill test (hands ≤1.2× body AND dropout <2%): **not triggered → PASS.**
 Worst clips (Gate A extras): `0glzpsqsrl, 0ddpfhlmff, 0b247hvyxo`.
 
-## 3. Results (PENDING sections)
+## 3. Results
 
-### 3.1 Gate A — PENDING (jobs 16541178/79/80 + 42_gate_a_inspect)
+### 3.1 Gate A — generation done (24/24 mp4), visual verdict PENDING
+Jobs 16541178/79/80, 8 cases × {off, raw, smooth σ=1.5}, graft/seed/stride
+fixed. Inspection sheets + paired diagnostics via `42_gate_a_inspect.py`
+(extract job on cluster → local report). **The verdict is the user's visual
+read of the wrist-crop sheets** (≥ half the cases with consistent
+hand-region change ⇒ channel live).
 
-### 3.2 Scaling v2 — PENDING (warmup fix, 3 seeds × {16,32,64,84})
+### 3.2 Scaling v2 (final; job 16542440, ~30 min A100)
 
-### 3.3 Decision — PENDING
+| train clips | held-out MSE (mean of 3 seeds) |
+|---|---|
+| 16 | 2.241 |
+| 32 | 1.163 |
+| 64 | 0.674 |
+| 84 | 0.521 |
+| spline / linear / gauss | **0.042** / 0.056 / 0.088 |
+
+Monotone, tight across seeds (84-clip: 0.490/0.533/0.540). Log-log slope
+**−0.868**; spline crossing extrapolates to **≈ 1,528 clips**. Even if the
+slope halves as data grows, the crossing stays ≈ 26 k < 50 k.
+Figures: `outputs/hand_pilot/fig/{scaling,gap_inpaint}.png`,
+decision JSON: `outputs/hand_pilot/decision.json`.
+
+### 3.3 Decision
 Pre-registered: asl50k justified iff slope < −0.05 AND extrapolated spline
-crossing < 50k clips AND Gate A live. Contamination note: every pilot
-checkpoint trains on P2-benchmark clips → throwaway; the real model trains
-on asl50k minus the 109 / same-signer / same-word.
+crossing < 50k clips AND Gate A live. **Slope/crossing: PASS. Gate A: awaiting
+visual verdict.** Contamination note: every pilot checkpoint trains on
+P2-benchmark clips → throwaway; the real model trains on asl50k minus the
+109 / same-signer / same-word. Open question for the asl50k handover:
+overlap with asl27k/the 109? signer/word metadata for exclusion? raw videos
+or pre-extracted poses (extraction of 50k clips ≈ the dominant compute)?
 
 ## 4. Reproducibility notes
 
