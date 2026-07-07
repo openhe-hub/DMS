@@ -18,7 +18,7 @@
 #   MODE=off|raw|smooth : one paired generation arm (8 cases, ~2.5-3 h).
 #   MODE=inspect : DWPose over the generated mp4s (42 --stage extract).
 set -euo pipefail
-MODE=${1:?check|off|raw|smooth|siren|gain3|gain10|inspect}
+MODE=${1:?check|off|raw|smooth|siren|gain3|gain10|inspect|report}
 
 BASE=/scratch/zl6890/zhewen
 REPO=$BASE/DisPose
@@ -47,6 +47,14 @@ elif [ "$MODE" = "inspect" ]; then
   python scripts/hand_pilot/42_gate_a_inspect.py --stage extract
   python scripts/hand_pilot/42_gate_a_inspect.py --stage report
   echo "INSPECT DONE"
+elif [ "$MODE" = "report" ]; then
+  # tagged multi-arm reports; cv2 needs libGL -> compute node, not login
+  python scripts/hand_pilot/42_gate_a_inspect.py --stage extract
+  python scripts/hand_pilot/42_gate_a_inspect.py --stage report \
+    --arms off,raw,smooth,siren --tag siren
+  python scripts/hand_pilot/42_gate_a_inspect.py --stage report \
+    --arms off,gain3,gain10 --tag gain
+  echo "REPORT DONE"
 else
   CFG=configs/test_sign_handflow_${MODE}.yaml
   [ -f "$CFG" ] || { echo "missing $CFG -- run 40_make_gate_a_configs.py"; exit 1; }
