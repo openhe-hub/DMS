@@ -85,12 +85,25 @@ Worst clips (Gate A extras): `0glzpsqsrl, 0ddpfhlmff, 0b247hvyxo`.
 
 ## 3. Results
 
-### 3.1 Gate A — generation done (24/24 mp4), visual verdict PENDING
+### 3.1 Gate A — interim: channel alive but WEAK
 Jobs 16541178/79/80, 8 cases × {off, raw, smooth σ=1.5}, graft/seed/stride
-fixed. Inspection sheets + paired diagnostics via `42_gate_a_inspect.py`
-(extract job on cluster → local report). **The verdict is the user's visual
-read of the wrist-crop sheets** (≥ half the cases with consistent
-hand-region change ⇒ channel live).
+fixed; sheets + paired diagnostics in `outputs/hand_pilot/gate_a/`.
+
+Interim read (3/8 sheets examined + diagnostics + pixel diff):
+- off/raw/smooth crops are **nearly indistinguishable**; hand failures (blob
+  fists where the source spreads fingers) are identical across arms.
+- Paired metrics tied to the 3rd decimal (mean_hand_conf ±0.003, hand_nme
+  ±0.02, several exact hand_good_rate ties).
+- Pixel diff off-vs-raw: mean ~1.2/255, max ~160-190 — **not a no-op**
+  (the flow perturbs the output) but no hand-structure change.
+
+Interpretation: the step2 mechanism (diffusion control-following dominates)
+applies to the ADDED channel too — DisPose's ControlNet was trained on
+18-point body flows and appears to under-read dense hand clusters.
+Escalation before verdict: (a) SIREN arm (queued; stronger intervention —
+gap frames previously invisible now carry flow), (b) `hand_flow_gain`
+ablation ×3/×10 on 3 cases (if ×10 changes nothing visible, the channel is
+dead without diffusion-side training). Final visual verdict: user.
 
 ### 3.2 Scaling v2 (final; job 16542440, ~30 min A100)
 
