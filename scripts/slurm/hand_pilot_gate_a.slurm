@@ -16,8 +16,9 @@
 #   MODE=check  : blocking regression (41 real + original 12_equiv_check).
 #                 MUST PASS before submitting any generation arm.
 #   MODE=off|raw|smooth : one paired generation arm (8 cases, ~2.5-3 h).
+#   MODE=inspect : DWPose over the generated mp4s (42 --stage extract).
 set -euo pipefail
-MODE=${1:?check|off|raw|smooth}
+MODE=${1:?check|off|raw|smooth|inspect}
 
 BASE=/scratch/zl6890/zhewen
 REPO=$BASE/DisPose
@@ -42,6 +43,10 @@ if [ "$MODE" = "check" ]; then
   echo "===== original step2 equivalence gate must still PASS ====="
   python scripts/step2/12_equiv_check.py --config configs/test.yaml --case 1
   echo "CHECK DONE"
+elif [ "$MODE" = "inspect" ]; then
+  python scripts/hand_pilot/42_gate_a_inspect.py --stage extract
+  python scripts/hand_pilot/42_gate_a_inspect.py --stage report
+  echo "INSPECT DONE"
 else
   CFG=configs/test_sign_handflow_${MODE}.yaml
   [ -f "$CFG" ] || { echo "missing $CFG -- run 40_make_gate_a_configs.py"; exit 1; }
