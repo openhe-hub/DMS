@@ -98,13 +98,18 @@ def verify_hand_order(poses, conf_thr=CONF_THR):
 
 # ------------------------------------------------------------------ windowing
 def make_hand_windows(poses, clip_id, span=32, step=8, conf_thr=CONF_THR,
-                      min_good_frac=0.8):
+                      min_good_frac=0.8, min_bone_px=8.0):
     """Slide windows over one clip; one record per (side, start).
 
     A window is kept iff every frame has a detected person, >= min_good_frac of
     frames have per-hand mean conf >= conf_thr, and the same fraction of frames
     have a confident body wrist for that side. Low-conf frames inside a kept
     window are retained (handled downstream by confidence weights).
+
+    min_bone_px: reject windows whose median wrist->mid-MCP length is below
+    this (pixels). DWPose emits collapsed ~2px "hands" at moderate confidence;
+    dividing by such a scale explodes the canonical frame (velocities 1e3+,
+    the P0 blow-up), and a hand that small carries no articulation signal.
 
     Returns a dict of stacked arrays (possibly empty):
       traj (S,span,21,2)  conf (S,span,21)  wrist/elbow (S,span,2)
@@ -131,6 +136,14 @@ def make_hand_windows(poses, clip_id, span=32, step=8, conf_thr=CONF_THR,
                 continue
             traj = hands[sl, i]
             if not np.isfinite(traj).all():
+                continue
+            bone = np.linalg.norm(
+                (hands[sl, i, WRIST] - hands[sl, i, MID_MCP])
+                * np.array([meta.get("W", 640), meta.get("H", 360)]), axis=-1)
+            good_b = ((hs[sl, i, WRIST] >= conf_thr)
+                      & (hs[sl, i, MID_MCP] >= conf_thr))
+            med_bone = np.median(bone[good_b]) if good_b.any() else np.median(bone)
+            if med_bone < min_bone_px:
                 continue
             rec["traj"].append(traj)
             rec["conf"].append(hs[sl, i])

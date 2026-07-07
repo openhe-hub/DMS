@@ -135,6 +135,7 @@ def train_hand_model(W, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,
             loss = loss_pos + vel_w * loss_vel
             opt.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(m.parameters(), 1.0)
             opt.step()
             lp += loss_pos.item()
             lv += loss_vel.item()
