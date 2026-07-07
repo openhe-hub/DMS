@@ -50,6 +50,11 @@ elif [ "$MODE" = "inspect" ]; then
 else
   CFG=configs/test_sign_handflow_${MODE}.yaml
   [ -f "$CFG" ] || { echo "missing $CFG -- run 40_make_gate_a_configs.py"; exit 1; }
+  if [ "$MODE" = "siren" ]; then
+    echo "===== reconstructing hand trajectories (crush-xl ckpt) ====="
+    python scripts/hand_pilot/43_reconstruct_hands.py --device cuda \
+      --ckpt outputs/hand_pilot/ckpt/p0_crush_xl.pt
+  fi
   python inference_ctrl.py --inference_config "$CFG" \
     --output_dir outputs/hand_pilot/gate_a --name "$MODE"
   echo "ARM $MODE DONE"
