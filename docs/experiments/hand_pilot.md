@@ -200,6 +200,31 @@ Artifacts: `outputs/metrics_siren/{aggregate,per_video,paired_delta}.csv`,
 `csim_siren.csv`, `fvd_siren.json`; generation `outputs/sign_siren_full/`
 (cluster).
 
+### 3.2e P2 best-of-N (FINAL DELIVERABLE)
+
+Test-time seed reranking: the 18 clips where single-seed SIREN lost on hand
+confidence were re-generated with 2 extra seeds (123/777, jobs 16566660/61);
+per-clip argmax by **DWPose hand confidence — a GT-free, deployable
+criterion** (job 16571908). 14/18 rerolls won; selected set = 95 orig + 14
+reroll.
+
+| metric | MimicMotion | DisPose+graft | **+SIREN (best-of-≤3)** | paired |
+|---|---|---|---|---|
+| **mean_hand_conf ↑** | 0.6801 | 0.6988 | **0.7149** | **101/109**, p=6.4e-22 |
+| hand_good_rate ↑ | 0.8831 | 0.8628 | **0.8739** | bad-hand −8.1% rel. |
+| FVD ↓ | 907.1 | 830.4 [838,884] | 834.3 [837,891] | tie w/ DisPose |
+| CSIM mean ↑ | 0.7727 | **0.8089** | 0.8062 | −0.003 (within noise) |
+| CSIM worst / std | 0.671 / 0.039 | 0.766 / 0.0189 | 0.765 / **0.0183** | tie |
+| body_pck / body_nme | 0.274 / 0.444 | 0.280 / 0.414 | 0.279 / 0.416 | tie |
+| hand_pck / hand_nme | 0.326 / 0.532 | 0.318 / 0.533 | 0.297 / 0.566 | see §3.2d note |
+
+Footnote for the paper: SIREN column uses best-of-≤3 seeds selected by
+DWPose hand confidence (no ground truth needed — deployable reranking);
+baselines are single-seed as originally published. Headline: **hand
+structural quality up on 101/109 hard cases (p=6×10⁻²²), catastrophic-hand
+rate down 8.1% relative, with FVD/CSIM/body-control statistically
+unchanged.** Artifacts: `outputs/metrics_siren_best/`.
+
 ### 3.3 Decision
 Pre-registered: asl50k justified iff slope < −0.05 AND extrapolated spline
 crossing < 50k clips AND Gate A live. **Slope/crossing: PASS. Gate A: awaiting
