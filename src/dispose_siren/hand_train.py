@@ -77,15 +77,28 @@ def train_hand_model(W, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,
                      aug_noise=(0.0, 0.02, 0.05, 0.10), target_sigma=1.25,
                      n_obs=16, gap_prob=0.3, gap_lens=(2, 3, 4, 5, 6, 8),
                      batch_size=128, model_cfg=None, device="cpu", seed=0,
-                     log=True, obs_jitter=True):
-    """W = dict from 32_build_windows (or a subset). Returns (model, history)."""
+                     log=True, obs_jitter=True, even_prob=0.0):
+    """W = dict from 32_build_windows (or a subset). Returns (model, history).
+
+    target_sigma <= 0 = memorization mode: L_pos targets the RAW detections
+    (overfit ceiling test); the velocity target stays on a lightly smoothed
+    track (raw finite-diff would amplify detection noise (span-1)x).
+    even_prob: probability of using the eval protocol's exact even-frame
+    observation pattern (so retrieval is trained on the pattern it is
+    tested with).
+    """
     rng = np.random.RandomState(seed)
     torch.manual_seed(seed)
     D = prepare_windows(W, device)
     S, span = D["traj_n_np"].shape[:2]
 
-    target = conf_smooth(D["traj_n_np"], D["conf_np"], target_sigma)
-    tgt_vel = np.diff(target, axis=1) * (span - 1)                # per-tau
+    if target_sigma and target_sigma > 0:
+        target = conf_smooth(D["traj_n_np"], D["conf_np"], target_sigma)
+        vel_src = target
+    else:
+        target = D["traj_n_np"]
+        vel_src = conf_smooth(D["traj_n_np"], D["conf_np"], 1.0)
+    tgt_vel = np.diff(vel_src, axis=1) * (span - 1)               # per-tau
     wv = np.minimum(D["conf_np"][:, :-1], D["conf_np"][:, 1:])    # (S,span-1,21)
 
     tb = torch.tensor(target.reshape(S, span, -1), dtype=torch.float32,
@@ -118,8 +131,11 @@ def train_hand_model(W, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,
         nb = 0
         for i in range(0, S, bs):
             idx = perm[i:i + bs]
-            if rng.rand() < gap_prob:
+            r = rng.rand()
+            if r < gap_prob:
                 oi = obs_gap(span, rng, gap_lens)
+            elif r < gap_prob + even_prob:
+                oi = np.arange(0, span, 2)                        # protocol A obs
             else:
                 oi = obs_uniform(span, n_obs, rng, jitter=obs_jitter)
             oit = torch.tensor(oi, dtype=torch.long, device=device)
