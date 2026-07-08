@@ -156,6 +156,50 @@ control), `get_video_pose(hand_override)` substitutes person-0 hands BEFORE
 rescale/graft, `hand_recon_dir` yaml field. Three-system comparison needs
 only the new arm generated — both baselines' 109-case outputs exist.
 
+### 3.2d P2 FINAL — three-system table on the full 109-case benchmark
+
+DisPose+graft+SIREN-hand generated on all 109 cases (jobs 16546502-04 +
+mop-up 16551355/56; two shards initially hit the 4 h limit → 10-clip mop-up)
+and scored with the EXACT baseline pipeline (same DWPose weights, shared
+pose_cache, same protocol; job 16551584). MimicMotion / DisPose columns from
+`baseline/quantitative.md`.
+
+| metric | MimicMotion | DisPose+graft | **+SIREN-hand** | paired (SIREN vs DisPose) |
+|---|---|---|---|---|
+| **mean_hand_conf ↑** | 0.6801 | 0.6988 | **0.7126** | **91/109** (sign test p=3e-13) |
+| hand_good_rate ↑ | 0.8831 | 0.8628 | **0.8713** | bad-hand rate −6.2% rel. |
+| **FVD ↓** | 907.1 [906,980] | **830.4** [838,884] | 837.1 [839,894] | tie (CIs coincide) |
+| CSIM mean ↑ | 0.7727 | 0.8089 | 0.8089 | 58/109, tie |
+| CSIM worst-frame ↑ | 0.6712 | 0.7659 | **0.7682** | ε-better |
+| CSIM std ↓ | 0.0392 | 0.0189 | **0.0181** | ε-better |
+| body_pck ↑ | 0.2743 | 0.2797 | 0.2796 | 50/109, tie |
+| body_nme ↓ | 0.4440 | 0.4142 | 0.4152 | ~tie (37/109) |
+| hand_pck ↑ | 0.3263 | 0.3175 | 0.2974 | 26/109, worse |
+| hand_nme ↓ | 0.5318 | 0.5328 | 0.5597 | 20/109, worse |
+
+**Readout (per the pre-registered criteria):**
+- **Hand structural quality (metric 1): decisive paired WIN** — mean hand
+  confidence up on 91/109 hard cases (p=3e-13), catastrophic/bad-hand frame
+  rate down 6.2% relative. This is the metric family that tracks the actual
+  failure mode (blob/garbled hands drive DWPose conf down).
+- **Guardrails hold**: FVD statistically unchanged vs DisPose (both crush
+  MimicMotion), CSIM identical mean with slightly better worst-frame and
+  stability, body control adherence unchanged.
+- **hand_pck/nme (pose adherence to raw source detections) decrease** — the
+  pre-registration excluded these as judgment metrics (insensitive to real
+  artifacts; MimicMotion scores higher with smooth-but-wrong hands), and the
+  effect is partly definitional: SIREN REPLACES raw detections with
+  denoised/inpainted trajectories, so deviation from the raw-detection
+  "reference" grows by construction whenever the raw reference itself is
+  noise or garbage.
+- Contamination caveat (pilot by design): the trajectory prior was overfit
+  on these same 109 clips — this is the intended ceiling demo; the clean
+  version trains on asl50k minus the 109 / same-signer / same-word.
+
+Artifacts: `outputs/metrics_siren/{aggregate,per_video,paired_delta}.csv`,
+`csim_siren.csv`, `fvd_siren.json`; generation `outputs/sign_siren_full/`
+(cluster).
+
 ### 3.3 Decision
 Pre-registered: asl50k justified iff slope < −0.05 AND extrapolated spline
 crossing < 50k clips AND Gate A live. **Slope/crossing: PASS. Gate A: awaiting
