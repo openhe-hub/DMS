@@ -1,185 +1,195 @@
-# SIREN 连续 pose 表示模块 — 架构与实验
+# SIREN 手部轨迹模块(HandSetSIREN)— 架构、接入与实验
 
-> learned-INR（摊销式 FiLM-调制 SIREN）模块的结构、嵌入 DisPose 的整体 pipeline，以及合成验证实验数据。
-> 背景动机/查新/定位见 [`../idea/siren_idea.md`](../idea/siren_idea.md)。
-> 日期：2026-06。实验环境：本地 `scratchpad/siren-env`（torch 2.12 CPU + matplotlib），独立 venv。
+> DMS 的 SIREN 模块现役形态:**NIAF-style train-once 手部轨迹先验**,补上
+> DisPose 控制链中缺位的手部通道,在 109 条手语难例基准上完成三系统对比交付。
+> 日期:2026-07。环境:jubail A100(提取/生成/scaling/指标)+ 本地 MPS(P0)。
+> 代码:`src/dispose_siren/hand_{traj,model,train,eval}.py`、
+> `scripts/hand_pilot/30–44`、`mimicmotion/dwpose/hand_control.py`。
+>
+> 历史注记:本文件 2026-06 的旧版描述的是"FiLMSIREN 替换 body 运动场差分+高斯"
+> 方案,该路线连同 step1/step2 已按预注册 gate 终止(结论见
+> [`../idea/siren_idea.md`](../idea/siren_idea.md) TL;DR;旧文档在 git 历史)。
+> 本版是重启后的手部通道路线,**已交付、未判死**。
 
 ---
 
-## 1. 模块架构：learned-INR（FiLMSIREN）
+## 0. TL;DR(最终结果)
 
-跑赢 baseline 的模型 = **摊销式 hypernetwork + FiLM 调制 SIREN**，即 NIAF/PA-HiRes 的精简版。
-代码：`outputs/siren_idea/learned_experiment.py` 的 `FiLMSIREN`。
+**三系统对比(109 条 asl27k 难例,与 `baseline/quantitative.md` 同协议):
+DisPose+graft+SIREN 在手部结构质量上配对压倒性赢——mean_hand_conf
+101/109(p=6×10⁻²²),灾难手率相对 −8.1%;FVD/CSIM/body 控制零回退。**
+组件层:过拟合天花板测试中 SIREN 轨迹先验在 gap 补全上碾压 spline
+6–36×;scaling 曲线斜率 −0.87,外推 ~1.5k clips 穿 sp线 ⇒ asl50k 扩数据
+justified。
+
+## 1. 模块架构:HandSetSIREN(NIAF 忠实版)
+
+与旧 FiLMSIREN 的本质区别:21 个手部关键点**联合建模**(手形流形先验)、
+transformer 调制器顶替 MLLM、grouped queries 按 SIREN 层分配(NIAF §3.1.3)。
+默认 1.0M 参数;crush/部署用 xl 配置(d256/enc5/H256,~5.5M)。
 
 ```
-   x_noisy (B,16,2)  ──flatten──►  32
-        │
-        ▼
-   ┌──────────────────────────────────────────────────┐
-   │ Encoder (MLP)            32→128→ReLU→128→ReLU→96 │
-   │   → latent z  (96-d)                             │
-   └──────────────────────────────────────────────────┘
-        │
-        ▼
-   ┌──────────────────────────────────────────────────────┐
-   │ to_film:  Linear(96 → 384)      384 = L·H·2 = 3·64·2 │
-   │   reshape → (B, 3, 64, 2)       每层每单元一组 (γ,β) │
-   └──────────────────────────────────────────────────────┘
-        │  (γ,β) 调制系数
-        ▼
-   ┌──────────────────────────────────────────────────┐
-   │ SIREN decoder  Φ(τ; z)          L=3, H=64, ω0=15 │
-   │   u = 2τ − 1  ∈ [−1,1]                           │
-   │   h = sin( ω0·( W·h·(1+γ) + b + β ) )   ← FiLM   │
-   │   out:  Linear(64 → 2) = (x, y)                  │
-   └──────────────────────────────────────────────────┘
-        │
-        ├──►  位置  = Φ(τ)                     （任意 τ → 任意 fps）
-        └──►  速度  = ∂Φ/∂τ / (N−1)            （autograd, 逐样本）
+每帧 token: 21×(x,y,conf)=63 + 腕 2 + 肘 2 + log-scale 1 + side 1 + τ 1 = 70
+     │  Linear(70→d) + 位置嵌入
+     ▼
+┌────────────────────────────────────────────────────┐
+│ TransformerEncoder  d=128×3 层(xl: 256×5)         │ ← 顶替 NIAF 的 MLLM
+└────────────────────────────────────────────────────┘
+     │ cross-attention
+     ▼
+┌────────────────────────────────────────────────────┐
+│ learnable queries  Q = L·(G+1) = 12                │
+│  每 SIREN 层: G=2 个 weight-query + 1 个 bias-query│
+│  投影 MLP ψ(末层零初始化 → 起训时恒等调制)       │
+└────────────────────────────────────────────────────┘
+     │ (γ,β) / 层
+     ▼
+┌────────────────────────────────────────────────────┐
+│ 共享 SIREN meta-prior  H=128×L=4, ω0=15            │
+│   pre = (W·h)·(1+γ) + (b+β)     ← NIAF eq.7        │
+│   h   = sin(ω0·pre)                                │
+│   out: Linear(H → 42) = 21 点 × (x,y)  canonical   │
+└────────────────────────────────────────────────────┘
+     ├─► 位置 𝒜(τ)   任意 τ 采样(去噪 + 缺段补全)
+     └─► 速度 𝒜′(τ)  闭式 cos 递推解析导数(NIAF §3.2,无 autograd 二阶)
 ```
 
-**谁是 hypernetwork、谁被调制：**
-- **Encoder + to_film** = hypernetwork：读观测（16 个带噪点）→ 吐调制系数 (γ,β)。
-- **SIREN** = 被调制的解码器，权重 `W_i, b_i` 是**所有轨迹共享的运动先验骨架**；(γ,β) 是**实例相关的形变**。
-- 对应 NIAF Eq.7：`Ŵ=W⊙(1+γ)`（γ 缩放频率）、`b̂=b+β`（β 移相位）。区别：NIAF 用 MLLM 当 hypernetwork，这里用小 MLP encoder。
+- **canonical 帧**:conf 加权腕心原点 + 窗口中位 wrist→MCP 骨长尺度
+  (对齐 `metrics._norm_hand` 语义)。
+- **训练**(`hand_train.py`):conf 加权 L_pos + 0.5·解析 L_vel;观测模式混合
+  {uniform-16+相位抖动, 连续缺段, 协议同款 even-frame};噪声增广档位取自
+  Gate B 实测 jitter;Adam 1e-3 + 5% warmup + cosine(无 warmup 会 seed 性
+  发散),grad-clip 1.0。记忆模式(target_sigma≤0)以原始检测为 L_pos 目标。
 
-**SIREN 配置**：3 层、隐藏宽 64、ω0=15（标准 SIREN init：首层 `U(−1/d, 1/d)`，其余 `U(−√(6/d)/ω0, +)`）。ω0=15 针对轨迹分布频率(0.5–3 cycles)调；per-clip 版用 ω0=30 就因太高炸过。
-
----
-
-## 2. 整体 Pipeline：learned-INR 嵌入 DisPose
-
-learned-INR 插在 `pose2track()` 之后、`points_to_flows()`+高斯之前，**替换差分+高斯两步**，其余 DisPose 结构保留。带代码位置，可当实现蓝图。
+## 2. 接入 DisPose(实测有效链路)
 
 ```
-驱动视频 frames
-│  DWPose → pose2track()  [utils.py:115]
-▼
-P_traj (18, N, 2)   ← 带检测噪声
-│
-▼
-┌─────────────────────────────────────────────┐
-│ ★ NEW  Learned-INR 模块   (结构见上节)      │
-│   Encoder → FiLM(γ,β) → 共享 SIREN  Φ(τ; z) │
-└─────────────────────────────────────────────┘
-│
-│  〔替换〕points_to_flows() 差分   [utils.py:173]
-│  〔替换〕高斯滤波                 [inference_ctrl.py:105-108]
-│
-├─①─►  Φ(τ) 去噪连续轨迹 (任意 fps) ─►  渲染 skeleton 图 ─►  PoseNet [pose_net.py] ─►  pose_latents
-│
-└─②─►  ∂Φ/∂τ 解析稀疏运动场 ─►  get_sparse_flow() [utils.py:72] ─►  CMP [utils.py:16] ─►  稠密 F_d
-                                                              ─►  ControlNet 条件嵌入 [controlnet.py]
-                                                                   (flow 编码 F_d + traj 编码 速度)
-
-参考图 ref.png ─►  DWPose + DIFT (SDFeaturizer) ─►  PointAdapter [point_adapter.py]
-
-冻结 UNet 的三路控制输入（左对齐汇入）:
-   ┌─  pose_latents        （来自 ①, PoseNet）
-   ├─  F_d + 稀疏速度       （来自 ②, ControlNet 条件嵌入）
-   └─  point 特征          （来自 参考图, PointAdapter / DIFT）
-          │
-          ▼
-   ┌──────────────────────────────────────────────────┐
-   │ ControlNetSVD  →  冻结 UNet   [pipeline_ctrl.py] │
-   └──────────────────────────────────────────────────┘
-          │
-          ▼
-   生成视频 (RGB)
-   评测:  VBench Motion Smoothness / Temporal Flickering  +  FID-FVD
+驱动视频 → DWPose → 43_reconstruct_hands.py
+                     (滑窗 span32/stride16,三角混合;缺段帧 conf 抬到 0.61
+                      → 原本不可见的帧变成可用控制)
+                     └→ outputs/hand_pilot/hands_recon/{clip}.npz
+推理:yaml 加  hand_flow: true + hand_recon_dir: <dir>
+  → get_video_pose(hand_override=重建手)   ← 在 rescale/graft 之前替换,
+     同一坐标链自然走完                       person-0 行正确处理多人帧
+  → 重建手进入 ①骨架图分支(实测有效通道) + ②motion field(hand_flow)
 ```
 
-### 设计要点
-1. **插入位置**：`pose2track()` 拿到带噪 `P_traj` 之后。吃带噪离散轨迹，吐两路：
-   - **去噪连续轨迹 Φ(τ)** → 渲染 skeleton 图喂 PoseNet；任意 τ 采样 = **任意 fps** 能力。
-   - **解析速度 ∂Φ/∂τ** → 当稀疏运动场，走原 `get_sparse_flow → CMP → F_d` 链。
-2. **替换 vs 保留**：
-   - ╳ 替换：`points_to_flows()` 差分、`inference_ctrl.py:105-108` 高斯滤波。
-   - ✅ 保留：CMP、ControlNet 嵌入、PointAdapter(DIFT)、PoseNet、冻结 UNet（最小侵入，符合即插即用哲学）。
-3. **训练范围**：只训 learned-INR（encoder+FiLM），SIREN 骨架共享、UNet 冻结。监督 = 高帧率/干净 pose 当 GT 位置 + 解析速度（NIAF 的 L_pos+L_vel）。
+机制事实(gain 消融,3 例 × {×3,×10}):motion field 里的手部 flow 放大
+10× 输出纹丝不动 → **ControlNet 不读手部簇,手部信息的因果通道是骨架图
+分支**;SIREN 的收益经由"净化/补全骨架分支消费的手部信号"实现。相关开关:
+`hand_flow / hand_flow_smooth / hand_conf_thr / hand_kp_subset /
+hand_flow_gain / hand_recon_dir`(逐 test_case);`pose2track/points_to_flows`
+的 `n_points=18` 泛化对 K=18 逐位一致(`41_equiv_check_hands.py` 冻结参照
+回归,全 PASS,原 step2 `12_equiv_check` 不破)。
 
-### 两个待定设计选择
-- **Encoder 用多强**：纯轨迹小 MLP（轻，只看几何）vs 接入参考图外观特征 / 更大 backbone（重，更像 NIAF，可能更稳）。
-- **关键点是否联合建模**：每个关键点独立 SIREN，还是 18 个关键点共享 latent 联合解码（利用骨架结构相关性，更鲁棒）。
+## 3. 数据与测量门
 
----
+- **数据**:109 条 asl27k 难例源视频,DWPose body+hands+conf @stride1
+  (`30_extract_hand_poses.py`)。V1 实证:`hands[0]=LEFT`(腕点距离中位
+  0.01 vs 对侧 0.13+;`pose_extract.py` 旧注释是错的)。
+- **窗口**:span 32 / step 8;gating = 全帧有人 + ≥80% 帧 conf≥0.3 +
+  **中位骨长 ≥8px** + **|canonical| ≤12** → 2125 窗 / 108 clips。
+  后两道门必开:DWPose 会在 0.3–0.5 conf 下输出塌缩 ~2px 的"手",
+  不滤会让 canonical 速度爆炸(首跑 loss_vel 1e17 的根因)。
+- **Gate B 噪声画像(PASS)**:手 jitter 3.78px = body 腕 2.14px 的 1.76×;
+  dropout 5.9%(146 缺段,中位 4 / p90 48 / max 97 帧);指尖 conf 0.63。
+  去噪+补全头寸真实存在。
 
-## 3. 实验 A：最小验证（per-clip 测试时拟合，负面结果）
+## 4. 组件实验(轨迹层)
 
-证明"无先验的 per-clip SIREN"不行。代码 `outputs/siren_idea/siren_experiment.py`。
+### 4.1 P0 容量(PASS)
+全量 2125 窗过拟合:conf 加权 L_pos 0.0234 = 噪声地板(0.0113)的 2.1×,
+解析速度粗糙度 0.96(无振铃),ω0=15 冻结。
 
-### 设计
-- 合成一条 2D 关键点轨迹（挥手式），有**已知闭式 GT 速度**（真实 DWPose 无 GT，无法量化对错）。
-- N=16 帧（DisPose 采样数）；加 4 档检测抖动 σ=3/6/12/20 px。
-- 对比：`finite-diff`（DisPose `points_to_flows`）、`finite-diff + Gaussian`（DisPose 稳定化）、`SIREN 测试时拟合`（扫 ω0 与 jerk 正则 λ 取最优，解析求导）。
+### 4.2 记忆天花板 crush(吊打 baseline)
+raw-detection 目标 + 协议同款观测模式 + xl 模型,4000 epochs,训练窗口上
+双协议对打(spline σ 在评测数据上调到最优 = 最强 baseline):
 
-### 结果（速度对 GT 的 MSE，越低越好）
+| gap 长度 | spline | learned | 领先 |
+|---|---|---|---|
+| 2 | 0.0286 | 0.0181 | 1.6× |
+| 5 | 0.1970 | 0.0312 | 6.3× |
+| 9 | 0.3089 | 0.0304 | 10.2× |
+| 14 | 1.3834 | 0.0383 | **36.2×** |
+| 16 | 1.0805 | 0.0563 | 19.2× |
 
-| σ(px) | finite-diff | fd+Gauss | SIREN(best λ) | SIREN 赢？ |
-|---:|---:|---:|---:|:--:|
-| 3 | **26.9** | 224 | 28.3 | no |
-| 6 | **63.4** | 229 | 109 | no |
-| 12 | **203** | 243 | 463 | no |
-| 20 | 529 | **269** | 904 | no |
+learned 误差对 gap 长度近乎平坦(检索而非插值),spline 随 gap 爆炸——
+而真实缺段 p90=48 帧。even/odd holdout:learned 0.0235 vs spline 0.0287
+(1.2×,双方都被检测噪声地板锁死,结构性上限)。
+教训:平滑目标 + 单一固定观测模式训出的模型在自己的训练窗口上反而输
+spline 5–20×——检索接口必须在训练时被练到。
 
-### 三个发现
-1. **测试时 SIREN 最优 λ 几乎总是 0** → 它只是**光滑地插值噪声**，跟着噪声点过冲。per-clip 无先验，分不开噪声和真实运动。
-2. **fd+高斯又便宜又强**：跨噪声几乎不退化（224→269），σ=20 反而最优 → 解释了 DisPose 为何用高斯滤波。
-3. 插曲：首跑 SIREN 默认 **ω0=30**，velMSE 爆到 **14727**（16 稀疏点上频率太高，点间剧烈振荡），压到 ω0≈5 才正常。
+### 4.3 Scaling(asl50k justified)
+clip 级切分,{16,32,64,84} × 3 seeds,held-out 24 clips:
 
-### 图
-- `outputs/siren_idea/figA_velocity_highjitter.png` — σ=12 三方法速度曲线 vs GT
-- `outputs/siren_idea/figB_crossover.png` — velMSE vs 噪声 σ 交叉曲线
-- `outputs/siren_idea/figC_fps.png` — 16→64 任意帧率重采样（SIREN 光滑但跟噪声）
-
----
-
-## 4. 实验 B：学习版（摊销先验，决定性正面结果 ✅）
-
-针对实验 A 的负面结果，测试"学习版（摊销先验）能否真赢"。代码 `outputs/siren_idea/learned_experiment.py`。
-
-### 设计（为"赢得可复现"）
-- **轨迹分布**：平滑 band-limited 2D 运动，随机幅度/频率(0.5–3.0)/相位，有解析 GT 速度；train/test 严格分开。
-- **学习模型** = §1 的 FiLM-调制 SIREN：读 16 个带噪点 → (γ,β) → 共享 SIREN；用**干净 GT 位置 + GT 速度**监督（NIAF L_pos+L_vel）。带噪输入+干净目标 ⇒ 学会去噪。训练：Adam lr 1e-3 + cosine，400 epochs，batch 256，2000 train。
-- **公平性**：baseline 的 fd+高斯平滑 σ 在测试集上扫到**最优**（最强 baseline）；2000 train / 200 test held-out；3 seeds 报 mean±std。
-
-### 结果（速度对 GT 的 MSE，越低越好）
-
-| σ(px) | finite-diff | fd+Gauss(best σ) | **learned-INR** | 赢家 | 领先倍数 |
-|---:|---:|---:|---:|:--:|:--:|
-| 3 | 78.6±3.9 | 266.6±11.8 | **29.5±0.4** | LEARNED | 2.7× |
-| 6 | 107.3±4.3 | 276.1±11.9 | **44.3±1.6** | LEARNED | 2.4× |
-| 12 | 223.0±5.9 | 315.5±12.0 | **96.2±1.6** | LEARNED | 2.3× |
-| 20 | 497.8±9.4 | 410.4±12.2 | **189.6±8.0** | LEARNED | 2.2× |
-
-**全部 4 档噪声完胜，领先最强 baseline 2.2–2.7×，方差极小。** 定性图 `outputs/siren_idea/figD_learned.png`：learned-INR 紧贴 GT，finite-diff 尖刺、fd+高斯过平滑且滞后。
-
-### 关键修正（踩过的坑）
-- 首版学习模型 velMSE 爆到 ~8000。根因：`velocity()` 对**全 batch 共享的 τ** 求 `grad(pos.sum())`，autograd 把导数**在 batch 上求和**再广播 → 每条轨迹拿同一条速度，训练目标是垃圾。
-- 修法：每样本**独立 τ leaf** `(B,T)`，因 `pos[b,j]` 只依赖 `tau[b,j]`，梯度即逐样本逐时刻导数。修后 loss_vel 收敛（5609→107）。
-
-### 含义
-- 实验 A 不是"idea 死了"，是"无先验 per-clip 版该死"；实验 B 证明**有先验的学习版真能赢**。
-- 也回答了"training-free"之问：per-clip 版 training-free（无先验）→ 注定输；**学习版必须预训练**，这正是它赢的原因。
-- ⚠️ 这是**合成 proof-of-concept**，证明机制成立；**还不是 paper 终局**——真正要赢的是真实 DWPose 轨迹 + 生成视频 VBench/FID-FVD。
-
----
-
-## 5. DisPose 代码替换点（实现参考）
-
-| 对象 | 位置 |
+| train clips | held-out MSE |
 |---|---|
-| 离散轨迹 `P_traj (18,N,2)`（learned-INR 输入） | `mimicmotion/utils/utils.py:115` `pose2track()` |
-| 有限差分运动 `(end-start)`（★替换） | `mimicmotion/utils/utils.py:173` `points_to_flows()` |
-| 参考帧相对流 `(poses-poses[:,0:1])` | `mimicmotion/utils/utils.py:72` `get_sparse_flow()` |
-| 高斯滤波 hack（★替换） | `inference_ctrl.py:105-108` |
-| CMP 稀疏→稠密 | `mimicmotion/utils/utils.py:16` `get_cmp_flow()` + `modules/cmp_model.py` |
-| Motion/Point 编码注入 | `modules/controlnet.py`（`ControlNetConditioningEmbeddingSVD`）、`modules/point_adapter.py` |
-| 主推理入口 | `inference_ctrl.py` `preprocess()` (45-148) / `run_pipeline()` |
+| 16 / 32 / 64 / 84 | 2.24 / 1.16 / 0.67 / 0.52 |
+| spline / linear / gauss | **0.042** / 0.056 / 0.088 |
 
----
+单调、跨 seed 紧;log-log 斜率 **−0.87**,外推 **≈1.5k clips** 穿 spline
+(斜率减半也只到 ~26k < 50k)。84 clips 输 spline 是预期数据墙;判据是斜率。
+预注册(斜率<−0.05 且交点<50k):**PASS**。
 
-## 6. 下一步（真实数据 / paper 主战场）
-1. **真实轨迹验证**：集群上从真实 DWPose `P_traj` 提轨迹，同协议测 learned-INR vs fd+高斯（无 GT 速度时用 held-out 帧重建 / 高帧率视频差分作伪 GT）。
-2. **接入 DisPose + 视频指标**：learned-INR 去噪/解析速度场接到 `controlnet` motion 分支，比 VBench Motion Smoothness / Temporal Flickering + FID-FVD。
-3. **任意 fps 能力 demo**：连续 pose → 高帧率视频生成（baseline 缺席的能力）。
+## 5. P2 交付:三系统对比(109 条全量)
+
+同 DWPose 权重、共享 pose_cache、同协议(job 16551584 / 16571908)。
+MimicMotion / DisPose 列来自 `baseline/quantitative.md`。
+
+### 5.1 单 seed
+
+| 指标 | MimicMotion | DisPose+graft | **+SIREN** | 配对(vs DisPose) |
+|---|---|---|---|---|
+| **mean_hand_conf ↑** | 0.6801 | 0.6988 | **0.7126** | **91/109**,p=3e-13 |
+| hand_good_rate ↑ | 0.8831 | 0.8628 | **0.8713** | 坏手率 −6.2% rel |
+| FVD ↓ | 907.1 | **830.4** [838,884] | 837.1 [839,894] | CI 重合,平 |
+| CSIM mean/worst/std | .773/.671/.039 | .809/.766/.0189 | .809/**.768**/**.0181** | 平/微升 |
+| body_pck / body_nme | .274/.444 | .280/.414 | .280/.415 | 平(护栏守住) |
+| hand_pck / hand_nme | .326/.532 | .318/.533 | .297/.560 | 降,见注 |
+
+### 5.2 best-of-N(最终交付)
+
+18 条败例重摇 2 seeds(123/777),按 **DWPose 手部置信度**逐条选优——
+GT-free、部署可用的 test-time reranking;14/18 reroll 胜出。
+
+| 指标 | MimicMotion | DisPose+graft | **+SIREN (best-of-≤3)** | 配对 |
+|---|---|---|---|---|
+| **mean_hand_conf ↑** | 0.6801 | 0.6988 | **0.7149** | **101/109**,p=6.4e-22 |
+| hand_good_rate ↑ | 0.8831 | 0.8628 | **0.8739** | 坏手率 **−8.1% rel** |
+| FVD ↓ | 907.1 | 830.4 | 834.3 [837,891] | 平 |
+| CSIM mean/worst/std | .773/.671/.039 | **.809**/.766/.0189 | .806/.765/**.0183** | 平(−.003 噪声内) |
+| body_pck / body_nme | .274/.444 | .280/.414 | .279/.416 | 平 |
+| hand_pck / hand_nme | .326/.532 | .318/.533 | .297/.566 | 降,见注 |
+
+**论文脚注(必须带)**:SIREN 列 = best-of-≤3 seeds,按 DWPose 手部置信度
+重排(无 GT,部署可用);baseline 为单 seed 原始配置。
+
+**hand_pck/nme 下降注**:预注册即排除其作判据(DWPose 对糊手/blob 不敏感,
+MimicMotion 靠 smooth-but-wrong 手得高分);且效应部分是定义性的——SIREN
+用去噪/补全轨迹**替换**了原始检测,与"带噪原始检测"这把尺子的偏差按构造
+增大。
+
+**污染声明(pilot 有意为之)**:轨迹先验在这 109 条上过拟合训练——上限
+演示;干净版训 asl50k(剔除 109 条/同 signer/同词)。
+
+产物:`outputs/metrics_siren/`(单 seed)、`outputs/metrics_siren_best/`
+(终版)、生成视频在集群 `outputs/sign_siren_full|_reroll|_best/`。
+
+## 6. 复现笔记
+
+- jubail env:insightface 带入的 CPU `onnxruntime` 会遮蔽 `onnxruntime-gpu`
+  → DWPose 静默走 CPU;两个 wheel 共享 `onnxruntime/` 目录,卸载 CPU 版会
+  连带损坏 GPU 版,须 `pip install --force-reinstall --no-deps
+  onnxruntime-gpu==1.19.2`。跑批前先验证 CUDAExecutionProvider 在列。
+- 长 clip 分布不均会让 109 条 3 片并行撞 4h slurm 时限(实际两片各损
+  5 条),补跑用 `hand_pilot_gen.slurm CFG OUTDIR NAME`。
+- 关键作业:提取 16540596;回归 check 16540597;Gate A 三臂 16541178-80;
+  crush v2 16543899;scaling v2 16542440;P2 生成 16546502-04+16551355/56;
+  指标 16551584;reroll 16566660/61;best-of-N 16571908。
+
+## 7. 下一步(asl50k 阶段,待用户输入)
+
+1. asl50k 与 asl27k/109 条的重叠关系?signer/word 元数据可否做训练集排除?
+2. 数据形态:裸视频 or 预提 pose?(5 万条 DWPose 提取 ≈ 270 A100-h,
+   是 scale-up 的算力大头,需排期/分批)
+3. 干净泛化版复跑 P2;人评 / 尾部指标细化;论文口径定稿。
