@@ -27,19 +27,21 @@ OUT = ROOT / "outputs/sign_cmp_hard27k"
 PANEL = 576          # working panel size; tile is downscaled 2x at the end
 PAD, MARGIN = 8, 8   # grid spacing (at final scale), matches original figure
 
-# (clip id, source frame index, gloss). Clips = the 8 mm_failures_grid picks;
-# frames re-picked 2026-07-11 from 12-candidate contact sheets to maximise the
-# MM-failure vs SIREN-clean-hand contrast at the SAME source instant
-# (mm_failures_grid frames kept where already optimal).
+# (clip id, source frame index, gloss). Clips drawn from the 15 hard27k pilot
+# clips (12 usable: podia's SIREN mp4 is corrupt, 2 clips lack gloss labels).
+# Frames picked 2026-07-11, v2 protocol: candidates = per-clip local minima of
+# the SIREN video's frame-difference motion (holds -> no motion blur), then
+# eyeballed on Source/MM/SIREN contact sheets for max "MM broken, SIREN crisp
+# handshape" contrast at the SAME source instant.
 SPECS = [
-    ("0bsujxxpwd", 425, "vulcanise"),      # MM: text-artifact burst
-    ("07imqjgcxc", 99, "lethargic"),       # MM: graffiti bg + arm stumps
-    ("05tcw2nou9", 35, "cowboy"),          # SIREN nails finger-gun, MM palm blob
-    ("0byrxo0heb", 56, "open book"),       # MM: source-background leakage
-    ("0db3uk2cqw", 150, "backlight"),      # MM: hallucinated yellow object
-    ("0bcxsenqga", 166, "hump"),           # SIREN arched-hand-over-palm, MM claw blur
-    ("0ihmqp5iz6", 53, "turn off (tv)"),   # SIREN L-hand on wrist, MM blob claw
-    ("0ejbehccd4", 21, "grade"),           # MM: text blob + fist smear
+    ("0bsujxxpwd", 446, "vulcanise"),      # MM text burst; SIREN crisp V-hand
+    ("03os6hy28y", 15, "deposit"),         # MM mangles double claw; SIREN bent fingers separated
+    ("0gjpljgpdj", 33, "choosey"),         # MM fingers tangled; SIREN clean thumb-hands
+    ("0byrxo0heb", 44, "open book"),       # MM finger smears + blue bg tint; SIREN spread-over-palm
+    ("0db3uk2cqw", 161, "backlight"),      # MM hallucinated yellow object; SIREN point-at-palm
+    ("0bcxsenqga", 117, "hump"),           # MM fuses fingers into slab; SIREN flat palm, fingers clear
+    ("0ihmqp5iz6", 59, "turn off (tv)"),   # MM blob claw on wrist; SIREN L-hand on wrist
+    ("0hwhrmyqqx", 98, "mobilisation"),    # MM claw blob; SIREN crisp OK-ring hand
 ]
 
 FONT_PATHS = [

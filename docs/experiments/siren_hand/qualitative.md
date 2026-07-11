@@ -22,43 +22,50 @@
 
 ## 2. 选帧协议(showcase,须披露)
 
-8 个词条沿用 `baseline/qualitative.md` §7 `mm_failures_grid.png` 的 clip 选择
-(MimicMotion 失败最典型的难例)。帧号在每条 clip 的 12 候选帧接触表
-(Source/MM/SIREN 三行)上目检重挑,判据 = **同一时刻 MM 失败明显且 SIREN
-手部干净**;4 条旧帧已最优保留,4 条更换:
+clip 池 = hard27k 15 条 pilot(`baseline/qualitative.md` §7;实际可用 12 条:
+podia 的 SIREN mp4 传输损坏,2 条无词标签)。两阶段:
 
-| 词条 | clip:帧 | 看点 |
-|---|---|---|
-| vulcanise | `0bsujxxpwd:425` | MM 蓝色文字水印爆发;SIREN 干净(沿用) |
-| lethargic | `07imqjgcxc:99` | MM 涂鸦背景 + 断臂残肢;SIREN 干净(沿用) |
-| cowboy | `05tcw2nou9:35`(原 64) | 源"手枪"手形 SIREN 精准复现;MM 塌成掌糊 |
-| open book | `0byrxo0heb:56` | MM 整背景被源蓝色淹没;SIREN 干净(沿用) |
-| backlight | `0db3uk2cqw:150` | MM 手中幻觉出黄色物体;SIREN 双手指点清晰(沿用) |
-| hump | `0bcxsenqga:166`(原 174) | 源拱形五指罩掌 SIREN 复现;MM 模糊爪形 |
-| turn off (tv) | `0ihmqp5iz6:53`(原 28) | 源 L 形手搭腕 SIREN 复现;MM 糊爪 |
-| grade | `0ejbehccd4:21`(原 23) | MM 文字块 + 拳头拖影;SIREN 平掌搭臂清晰 |
+1. **候选帧 = SIREN 视频的运动低谷**(64×64 灰度帧差 + 5 帧平滑,取局部
+   最小、间隔 ≥12 帧)——手语"驻留"时刻,手形定格、无运动模糊。首版直接
+   沿用 `mm_failures_grid` 的帧号,SIREN 列多为快动帧、手糊,被否。
+2. 候选帧接触表(Source/MM/SIREN 三行)目检,判据 = **同一源时刻 MM 失败
+   明显 且 SIREN 手形清晰**;MM 在驻留帧不烂的 clip 整条弃用
+   (cowboy/grade/lethargic 因此出局,换入 deposit/choosey/mobilisation)。
+
+| 词条 | clip:帧 | MM 失败 | SIREN 手形 |
+|---|---|---|---|
+| vulcanise | `0bsujxxpwd:446` | 文字/涂鸦爆发 + 橙色碎块 | 捏合手定格 |
+| deposit | `03os6hy28y:15` | 双手爪形绞成团 | 双手弯指根根分明 |
+| choosey | `0gjpljgpdj:33` | 双手手指互缠 | 双拇指手形干净 |
+| open book | `0byrxo0heb:44` | 指间黑糊块 + 背景泛蓝 | 张开五指罩掌 |
+| backlight | `0db3uk2cqw:161` | 手中幻觉黄色物体 | 指点掌心清晰 |
+| hump | `0bcxsenqga:117` | 手指黏连成板 + 右手爪 | 平掌五指分明 |
+| turn off (tv) | `0ihmqp5iz6:59` | 腕上团爪 | L 形手搭腕 |
+| mobilisation | `0hwhrmyqqx:98` | 面前爪团 | 圆环(OK)手形 |
 
 **披露口径(论文 caption 必须带)**:定性图为 showcase——clip 取 MimicMotion
-失败典型例,帧为人工挑选;SIREN 列 = best-of-≤3 seeds 按 DWPose 手部置信度
-重排(与 §5.2 同一披露)。总体分布性结论以 `siren_module.md` §5 的 109 条
-配对统计为准(mean_hand_conf 101/109,p=6.4e-22)。
+失败典型例,帧取 SIREN 驻留时刻并人工挑选;SIREN 列 = best-of-≤3 seeds 按
+DWPose 手部置信度重排(与 §5.2 同一披露)。总体分布性结论以
+`siren_module.md` §5 的 109 条配对统计为准(mean_hand_conf 101/109,
+p=6.4e-22)。
 
 ## 3. 读图要点
 
-- MimicMotion 的五类失败(文字爆发 / 背景渗漏 / 幻觉物体 / 断臂 / 糊手,
-  taxonomy 见 `baseline/qualitative.md` §7)在 SIREN 列全部不出现;
-- 新挑的 4 帧(cowboy/hump/turn off/grade)专门展示**手形结构级差异**:
-  同一时刻 SIREN 复现源手形(手枪 / 拱形罩掌 / L 形搭腕 / 平掌),MM 为
-  blob/爪形——这是 mean_hand_conf 配对优势的可视化;
+- 8 格 SIREN 列全部是**定格清晰的手形**;MM 列同一时刻覆盖其失败 taxonomy
+  (文字爆发 / 背景渗漏 / 幻觉物体 / 糊手绞团,见 `baseline/qualitative.md`
+  §7)——这是 mean_hand_conf 配对优势的可视化;
+- deposit/choosey/mobilisation 三格是**手形结构级对比**的主力:双爪、
+  互缠、圆环这类多指构型,MM 一律塌缩,SIREN 逐指成形;
 - 身份列稳定(hijab 参考 `test2.jpg`),与 CSIM 结论一致。
 
 ## 4. 复现
 
 ```bash
-# 前置:8 条 SIREN best 视频在 outputs/sign_siren_best/best/(可从集群 rsync)
+# 前置:SIREN best 视频在 outputs/sign_siren_best/best/(可从集群 rsync;
+# tar 打包记得 -h 解引用,best/ 里是指向 sign_siren_full 分片的软链)
 python3 scripts/hand_pilot/make_qual_grid.py
 # → outputs/sign_cmp_hard27k/figs/mm_vs_siren_grid.png (1752x1192)
 ```
 
-换 clip/帧改脚本内 `SPECS`;候选帧接触表的生成逻辑见 git 历史或按 §2 协议
-重写(12 均匀候选 + 原帧,三行并排目检)。
+换 clip/帧改脚本内 `SPECS`;候选帧生成按 §2 协议(帧差运动低谷 +
+Source/MM/SIREN 接触表目检)。
