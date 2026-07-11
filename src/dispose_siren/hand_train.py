@@ -60,7 +60,7 @@ def obs_gap(span, rng, gap_lens=(2, 3, 4, 5, 6, 8)):
 
 
 def prepare_windows(W, device="cpu"):
-    """32_build_windows dict -> canonical torch tensors + numpy targets base."""
+    """build_windows dict -> canonical torch tensors + numpy targets base."""
     traj_n, wrist_n, elbow_n, mu, sc = hand_canon(W["traj"], W["conf"],
                                                   W["wrist"], W["elbow"])
     side_pm = W["side"].astype(np.float64) * 2.0 - 1.0
@@ -78,7 +78,7 @@ def train_hand_model(W, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,
                      n_obs=16, gap_prob=0.3, gap_lens=(2, 3, 4, 5, 6, 8),
                      batch_size=128, model_cfg=None, device="cpu", seed=0,
                      log=True, obs_jitter=True, even_prob=0.0):
-    """W = dict from 32_build_windows (or a subset). Returns (model, history).
+    """W = dict from build_windows (or a subset). Returns (model, history).
 
     target_sigma <= 0 = memorization mode: L_pos targets the RAW detections
     (overfit ceiling test); the velocity target stays on a lightly smoothed

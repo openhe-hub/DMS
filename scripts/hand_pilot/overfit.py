@@ -8,10 +8,10 @@ capacity + pipeline, nothing else. --sweep runs the one-off w0 sweep
 (frozen afterwards).
 
 Usage:
-  python scripts/hand_pilot/33_overfit.py --limit 64 --epochs 200   # smoke
-  python scripts/hand_pilot/33_overfit.py                            # full
-  python scripts/hand_pilot/33_overfit.py --sweep                    # w0 pick
-  python scripts/hand_pilot/33_overfit.py --crush --epochs 2000      # ceiling
+  python scripts/hand_pilot/overfit.py --limit 64 --epochs 200   # smoke
+  python scripts/hand_pilot/overfit.py                            # full
+  python scripts/hand_pilot/overfit.py --sweep                    # w0 pick
+  python scripts/hand_pilot/overfit.py --crush --epochs 2000      # ceiling
 
 --crush = memorization ceiling test: L_pos targets the RAW detections
 (target_sigma=0), training obs patterns include the protocols' own

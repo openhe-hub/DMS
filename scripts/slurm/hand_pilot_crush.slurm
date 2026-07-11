@@ -26,5 +26,5 @@ export OMP_NUM_THREADS=8
 export KMP_DUPLICATE_LIB_OK=TRUE
 
 cd "$REPO"
-python scripts/hand_pilot/33_overfit.py --crush --xl --epochs 4000 --device cuda "$@"
+python scripts/hand_pilot/overfit.py --crush --xl --epochs 4000 --device cuda "$@"
 echo "CRUSH DONE"

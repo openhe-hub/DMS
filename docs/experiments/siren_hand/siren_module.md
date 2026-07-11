@@ -4,7 +4,7 @@
 > DisPose 控制链中缺位的手部通道,在 109 条手语难例基准上完成三系统对比交付。
 > 日期:2026-07。环境:jubail A100(提取/生成/scaling/指标)+ 本地 MPS(P0)。
 > 代码:`src/dispose_siren/hand_{traj,model,train,eval}.py`、
-> `scripts/hand_pilot/30–44`、`mimicmotion/dwpose/hand_control.py`。
+> `scripts/hand_pilot/`、`mimicmotion/dwpose/hand_control.py`。
 >
 > 历史注记:本文件 2026-06 的旧版描述的是"FiLMSIREN 替换 body 运动场差分+高斯"
 > 方案,该路线连同 step1/step2 已按预注册 gate 终止(结论见
@@ -64,7 +64,7 @@ transformer 调制器顶替 MLLM、grouped queries 按 SIREN 层分配(NIAF §3.
 ## 2. 接入 DisPose(实测有效链路)
 
 ```
-驱动视频 → DWPose → 43_reconstruct_hands.py
+驱动视频 → DWPose → reconstruct_hands.py
                      (滑窗 span32/stride16,三角混合;缺段帧 conf 抬到 0.61
                       → 原本不可见的帧变成可用控制)
                      └→ outputs/hand_pilot/hands_recon/{clip}.npz
@@ -79,13 +79,13 @@ transformer 调制器顶替 MLLM、grouped queries 按 SIREN 层分配(NIAF §3.
 分支**;SIREN 的收益经由"净化/补全骨架分支消费的手部信号"实现。相关开关:
 `hand_flow / hand_flow_smooth / hand_conf_thr / hand_kp_subset /
 hand_flow_gain / hand_recon_dir`(逐 test_case);`pose2track/points_to_flows`
-的 `n_points=18` 泛化对 K=18 逐位一致(`41_equiv_check_hands.py` 冻结参照
-回归,全 PASS,原 step2 `12_equiv_check` 不破)。
+的 `n_points=18` 泛化对 K=18 逐位一致(`equiv_check_hands.py` 冻结参照
+回归,全 PASS,原 step2 `equiv_check` 不破)。
 
 ## 3. 数据与测量门
 
 - **数据**:109 条 asl27k 难例源视频,DWPose body+hands+conf @stride1
-  (`30_extract_hand_poses.py`)。V1 实证:`hands[0]=LEFT`(腕点距离中位
+  (`extract_hand_poses.py`)。V1 实证:`hands[0]=LEFT`(腕点距离中位
   0.01 vs 对侧 0.13+;`pose_extract.py` 旧注释是错的)。
 - **窗口**:span 32 / step 8;gating = 全帧有人 + ≥80% 帧 conf≥0.3 +
   **中位骨长 ≥8px** + **|canonical| ≤12** → 2125 窗 / 108 clips。

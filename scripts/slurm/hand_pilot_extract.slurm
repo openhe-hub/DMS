@@ -32,13 +32,13 @@ cd "$REPO"
 nvidia-smi || true
 python -c "import onnxruntime as ort; print('ORT providers:', ort.get_available_providers())"
 
-python scripts/hand_pilot/30_extract_hand_poses.py \
+python scripts/hand_pilot/extract_hand_poses.py \
   --video_dir assets/example_data/sign_videos/hard27k_orig \
   --check_cache outputs/metrics_hard27k/pose_cache \
   --skip_existing "$@"
 
 echo "===== windows (cluster-side sanity; canonical build happens locally) ====="
-python scripts/hand_pilot/32_build_windows.py
+python scripts/hand_pilot/build_windows.py
 
 echo "done"
 find "$REPO/outputs/hand_pilot/poses" -type f | wc -l

@@ -18,5 +18,5 @@ module load cuda/12.2.0
 source activate "$ENVDIR"
 export KMP_DUPLICATE_LIB_OK=TRUE
 cd "$REPO"
-python scripts/round1_archive/step1/04_noise_sweep.py
+python scripts/round1_archive/step1/noise_sweep.py
 echo "===== done ====="

@@ -24,10 +24,10 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 cd "$REPO"
 
 for c in 0 1 2; do
-  python scripts/round1_archive/step2/14_rife_upsample.py --case $c --strides 4 8 || true
+  python scripts/round1_archive/step2/rife_upsample.py --case $c --strides 4 8 || true
 done
 
-python scripts/round1_archive/step2/13_pilot_metrics.py --cases 0 1 2
-python scripts/round1_archive/step2/15_pilot_figs.py
+python scripts/round1_archive/step2/pilot_metrics.py --cases 0 1 2
+python scripts/round1_archive/step2/pilot_figs.py
 
 echo "METRICS DONE"

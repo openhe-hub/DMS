@@ -12,7 +12,7 @@ Checks:
 
 --mode synthetic (default): pure numpy, runs anywhere.
 --mode real: shared-detection build_control(lite=True) comparison on a config
-  case (GPU DWPose; run on jubail). The original scripts/step2/12_equiv_check.py
+  case (GPU DWPose; run on jubail). The original scripts/step2/equiv_check.py
   must also still PASS -- run it separately (same sbatch).
 """
 import argparse
@@ -222,7 +222,7 @@ def main():
     ap.add_argument("--case", type=int, default=0)
     args = ap.parse_args()
 
-    print(f"41_equiv_check_hands mode={args.mode}", flush=True)
+    print(f"equiv_check_hands mode={args.mode}", flush=True)
     ok = run_synthetic()
     if args.mode == "real":
         print("\n-- real-detection checks --", flush=True)

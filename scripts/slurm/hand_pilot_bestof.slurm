@@ -34,7 +34,7 @@ for S in s123 s777; do
     --out-dir outputs/metrics_reroll_${S} --cache-dir $CACHE
 done
 
-python scripts/hand_pilot/44_select_best.py \
+python scripts/hand_pilot/select_best.py \
   --reroll outputs/metrics_reroll_s123/per_video.csv "outputs/sign_siren_reroll/*_s123" \
   --reroll outputs/metrics_reroll_s777/per_video.csv "outputs/sign_siren_reroll/*_s777"
 

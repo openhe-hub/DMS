@@ -26,5 +26,5 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 
 cd "$REPO"
 nvidia-smi || true
-python scripts/hand_pilot/34_scaling_curve.py --device cuda "$@"
+python scripts/hand_pilot/scaling_curve.py --device cuda "$@"
 echo "SCALING DONE"

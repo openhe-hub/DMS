@@ -2,7 +2,7 @@
 
 **结论（诚实）：在 pose-level、真实 DWPose 轨迹上，learned-INR 完败于简单 baseline（linear interp / finite-diff），差距约 2.5–3×。而且这不是"噪声不够大"，而是 synthetic 先验与真实运动之间的 domain gap——注入噪声扫到 σ=32px 仍然没有任何 crossover。** Experiment B 在 synthetic 上 2.2–2.7× 的胜势，无法迁移到真实数据。
 
-代码：`src/dispose_siren/`（库层）+ `scripts/step1/`（脚本层）。运行：Jubail A100，job 16445712（主）/ 16445726（噪声扫）。
+代码：`src/dispose_siren/`（库层）+ `scripts/round1_archive/step1/`（脚本层）。运行：Jubail A100，job 16445712（主）/ 16445726（噪声扫）。
 
 ---
 
@@ -40,7 +40,7 @@ learned-INR 比最强 baseline **差约 2.7×（A）/ 3.1×（B）**。
 
 ## 决定性诊断：domain gap，不是噪声级别
 
-在**真实轨迹上注入**合成抖动 σ 并扫描，看 learned 是否随噪声增大反超 baseline（`scripts/step1/04_noise_sweep.py`，job 16445726）：
+在**真实轨迹上注入**合成抖动 σ 并扫描，看 learned 是否随噪声增大反超 baseline（`scripts/round1_archive/step1/noise_sweep.py`，job 16445726）：
 
 | 注入 σ(px) | base_A | learn_A | winA | base_B | learn_B | winB |
 |---|---|---|---|---|---|---|
@@ -64,7 +64,7 @@ learned-INR 比最强 baseline **差约 2.7×（A）/ 3.1×（B）**。
 
 ## 补充：改训真实运动先验（Step 1.5，leave-one-video-out）—— 撞数据墙
 
-为修 domain gap，在真实 DWPose 轨迹上**自监督改训** INR（high-fps dense 轻平滑当 pseudo-clean target，降采样+加噪当输入，L_pos+0.5·L_vel，scale-invariant）。用 **leave-one-video-out**（2 段训、1 段测）做真正的泛化测试。`scripts/step1/05_real_finetune_lovo.py` + `src/dispose_siren/real_train.py`。
+为修 domain gap，在真实 DWPose 轨迹上**自监督改训** INR（high-fps dense 轻平滑当 pseudo-clean target，降采样+加噪当输入，L_pos+0.5·L_vel，scale-invariant）。用 **leave-one-video-out**（2 段训、1 段测）做真正的泛化测试。`scripts/round1_archive/step1/real_finetune_lovo.py` + `src/dispose_siren/real_train.py`。
 
 踩坑：伪 GT 速度 = `diff(real_dense)·(span-1)` 会把检测噪声放大 ×47，`loss_vel` 巨大且噪声化 → 必须 target_sigma=2.0 多平滑 + vel_w=0.5 压权重 + weight_decay。
 
@@ -81,5 +81,5 @@ learned-INR 比最强 baseline **差约 2.7×（A）/ 3.1×（B）**。
 
 ## 文件
 - 库：`src/dispose_siren/{synth,models,baselines,normalize,trajectory,train,eval_protocols}.py`
-- 脚本：`scripts/step1/0{1,2,3,4}_*.py`、`scripts/slurm/step1_{siren,sweep}.slurm`
+- 脚本：`scripts/round1_archive/step1/`、`scripts/round1_archive/slurm/`
 - 产物（gitignored，local）：`outputs/step1/{traj,ckpt,fig}/`，图 `step1_real_bars.png`、`step1_noise_sweep.png`

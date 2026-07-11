@@ -12,7 +12,7 @@
 - 后向流 m→k0/k1 从**插值关键点自建**(可见 kp 位移 Nadaraya-Watson 高斯撒点,
   无支撑处→0),确定性、避开 CMP scatter 竞态。
 - 控制信号 = linear 插值 pose(R012:插值方法在 video-level 无差异)。
-- 代码:`scripts/step3/`(lib_fusion.py:FusionCallback latent 空间 /
+- 代码:`scripts/round1_archive/step3/`(lib_fusion.py:FusionCallback latent 空间 /
   X0FusionScheduler x0 空间;21 生成;23 分桶评测)。
 
 ## R101 dev(case0=video1,stride 8,与 R011 完全配对;两轮,预注册上限)
@@ -76,4 +76,4 @@ Round1 全灭,Round2 LPIPS 全部显著差于 linear → **step3 终止,R102(3-c
    在该操作点均无头寸"。
 2. `X0FusionScheduler`(零侵入 x0 空间干预框架)与关键点自建流场:可复用于
    任何后续采样时干预实验。
-3. 分桶评测脚本(23_bucket_metrics.py):运动幅度分桶的逐帧 PSNR/LPIPS,通用。
+3. 分桶评测脚本(bucket_metrics.py):运动幅度分桶的逐帧 PSNR/LPIPS,通用。

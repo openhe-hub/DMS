@@ -118,7 +118,7 @@ linear(连续控制)输出清晰但姿态偏离 GT;RIFE 在快速手臂上有轻
    独立成顶会正文不够。
 2. **DisPose 上游两个可复现性问题**(可提 issue/PR):DWPose ONNX-GPU 非确定性影响配对评测;
    `sample_optical_flow` 重复索引 scatter 竞态(不可见关键点堆在 (0,0))导致相同输入不同控制信号。
-3. **可复用基建**:自驱动低fps评测协议 + 配对生成管线(`scripts/step2/`)、批量 per-clip SIREN/样条库
+3. **可复用基建**:自驱动低fps评测协议 + 配对生成管线(`scripts/round1_archive/step2/`)、批量 per-clip SIREN/样条库
    (`src/dispose_siren/interp.py`)——任何后续"控制信号 vs 后处理"类比较可直接复用。
 
 **若要继续在此方向找 idea,应打扩散侧而非控制侧**(机制结论指向的真瓶颈):
@@ -126,6 +126,6 @@ linear(连续控制)输出清晰但姿态偏离 GT;RIFE 在快速手臂上有轻
 而不是生成后修)。这是新 idea,需要重新走 refine/查新流程。
 
 ## 文件
-- 库:`src/dispose_siren/interp.py`(自然三次样条 + 批量 per-clip SIREN)、`scripts/step2/lib_lowfps.py`
-- 脚本:`scripts/step2/1{0,1,2,3,4}_*.py`、`scripts/slurm/step2_{pilot,metrics}.slurm`
+- 库:`src/dispose_siren/interp.py`(自然三次样条 + 批量 per-clip SIREN)、`scripts/round1_archive/step2/lib_lowfps.py`
+- 脚本:`scripts/round1_archive/step2/`、`scripts/round1_archive/slurm/`
 - 产物(集群):`outputs/step2/{fig,pilot}/`

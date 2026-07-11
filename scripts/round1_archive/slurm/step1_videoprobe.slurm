@@ -24,10 +24,10 @@ cd "$REPO"
 nvidia-smi || true
 
 echo "===== Probe A: generate videos across motion-field jitter ====="
-python scripts/round1_archive/step1/06_video_sensitivity.py --case 1 --noises 0 4 8 16 32 --max_frames 40
+python scripts/round1_archive/step1/video_sensitivity.py --case 1 --noises 0 4 8 16 32 --max_frames 40
 
 echo "===== Probe A: video-level metrics ====="
-python scripts/round1_archive/step1/07_video_metrics.py
+python scripts/round1_archive/step1/video_metrics.py
 
 echo "===== done ====="
 find "$REPO/outputs/step1/video_probe" -type f | sort

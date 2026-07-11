@@ -13,7 +13,7 @@
 
 # Gate A: hand_flow channel-causality probe.
 # Usage: sbatch hand_pilot_gate_a.slurm MODE
-#   MODE=check  : blocking regression (41 real + original 12_equiv_check).
+#   MODE=check  : blocking regression (41 real + original equiv_check).
 #                 MUST PASS before submitting any generation arm.
 #   MODE=off|raw|smooth : one paired generation arm (8 cases, ~2.5-3 h).
 #   MODE=inspect : DWPose over the generated mp4s (42 --stage extract).
@@ -38,29 +38,29 @@ nvidia-smi || true
 
 if [ "$MODE" = "check" ]; then
   echo "===== 41 hand_flow regression (synthetic + real) ====="
-  python scripts/hand_pilot/41_equiv_check_hands.py --mode real \
+  python scripts/hand_pilot/equiv_check_hands.py --mode real \
     --config configs/test_sign_hard27k.yaml --case 0
   echo "===== original step2 equivalence gate must still PASS ====="
-  python scripts/round1_archive/step2/12_equiv_check.py --config configs/test.yaml --case 1
+  python scripts/round1_archive/step2/equiv_check.py --config configs/test.yaml --case 1
   echo "CHECK DONE"
 elif [ "$MODE" = "inspect" ]; then
-  python scripts/hand_pilot/42_gate_a_inspect.py --stage extract
-  python scripts/hand_pilot/42_gate_a_inspect.py --stage report
+  python scripts/hand_pilot/gate_a_inspect.py --stage extract
+  python scripts/hand_pilot/gate_a_inspect.py --stage report
   echo "INSPECT DONE"
 elif [ "$MODE" = "report" ]; then
   # tagged multi-arm reports; cv2 needs libGL -> compute node, not login
-  python scripts/hand_pilot/42_gate_a_inspect.py --stage extract
-  python scripts/hand_pilot/42_gate_a_inspect.py --stage report \
+  python scripts/hand_pilot/gate_a_inspect.py --stage extract
+  python scripts/hand_pilot/gate_a_inspect.py --stage report \
     --arms off,raw,smooth,siren --tag siren
-  python scripts/hand_pilot/42_gate_a_inspect.py --stage report \
+  python scripts/hand_pilot/gate_a_inspect.py --stage report \
     --arms off,gain3,gain10 --tag gain
   echo "REPORT DONE"
 else
   CFG=configs/test_sign_handflow_${MODE}.yaml
-  [ -f "$CFG" ] || { echo "missing $CFG -- run 40_make_gate_a_configs.py"; exit 1; }
+  [ -f "$CFG" ] || { echo "missing $CFG -- run make_arm_configs.py"; exit 1; }
   if [ "$MODE" = "siren" ]; then
     echo "===== reconstructing hand trajectories (crush-xl ckpt) ====="
-    python scripts/hand_pilot/43_reconstruct_hands.py --device cuda \
+    python scripts/hand_pilot/reconstruct_hands.py --device cuda \
       --ckpt outputs/hand_pilot/ckpt/p0_crush_xl.pt
   fi
   python inference_ctrl.py --inference_config "$CFG" \

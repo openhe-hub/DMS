@@ -46,7 +46,7 @@
   1. **DisPose 原版**(fd+Gauss,stride-s 网格上跑,含调优高斯 σ)± RIFE 后处理
   2. **连续控制-简单参数化**:linear / cubic spline 关键点插值 → 渲 skeleton + 差分速度
   3. **连续控制-INR**(本方法):Φ(τ) 渲 skeleton + ∂Φ/∂τ 解析速度 → CMP
-- **Metrics**: 决定性 = PSNR/SSIM/LPIPS(vs GT 逐帧)、FVD;次要 = VBench Motion Smoothness、Temporal Flickering、warp_error(已有实现 `07_video_metrics.py`)。
+- **Metrics**: 决定性 = PSNR/SSIM/LPIPS(vs GT 逐帧)、FVD;次要 = VBench Motion Smoothness、Temporal Flickering、warp_error(已有实现 `video_metrics.py`)。
 - **Setup**: Jubail A100;UNet/ControlNet/CMP/PointAdapter 全冻结(只动控制信号构造);固定 diffusion seed 逐视频配对比较;分辨率/步数沿用 `configs/test.yaml`。
 - **Success criterion**: stride≥4 时 INR(或 spline)在 LPIPS/FVD/MS 上显著优于「原版+RIFE」;stride=1 时不差于原版。
 - **Failure interpretation**: 若连续控制在 stride≥4 无优势 → 扩散模型对控制信号时间分辨率不敏感,方向终止;若只有 spline≈INR 都赢 → 贡献口径改为"连续时间控制信号"。
@@ -153,7 +153,7 @@ latents(`[1,F,4,h/8,w/8]`,帧 0 = ref,输出时丢弃 → mid/obs 索引整体 +
 新增 fusion:4/8 × 3 case = 6 个生成 + case0/stride8 上 4 个 dev 配置
 (α∈{0.15,0.3} × 窗口{[0.3,0.9],[0.0,0.7]}),dev 选定后冻结。
 
-**评测**:23_bucket_metrics —— mid 帧逐帧 PSNR/LPIPS,按 GT 关键点运动幅度
+**评测**:bucket_metrics —— mid 帧逐帧 PSNR/LPIPS,按 GT 关键点运动幅度
 (相邻 GT 帧平均可见 kp 位移)三分桶,报告 slow/mid/fast 桶均值;obs 帧不受融合影响
 (callback 不碰 obs)= 内置 sanity。
 

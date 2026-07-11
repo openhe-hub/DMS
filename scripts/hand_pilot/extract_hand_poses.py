@@ -5,7 +5,7 @@ repo root, so this script chdirs there. Outputs one npz per clip plus a
 manifest, and performs the V1 hand-order verification on the first clips.
 
 Usage (cluster):
-  python scripts/hand_pilot/30_extract_hand_poses.py \
+  python scripts/hand_pilot/extract_hand_poses.py \
       --video_dir assets/example_data/sign_videos/hard27k_orig
 Smoke: add --limit 2.
 Optional cross-check against the metrics pose_cache: --check_cache <dir>.

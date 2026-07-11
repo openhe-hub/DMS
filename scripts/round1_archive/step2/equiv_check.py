@@ -6,7 +6,7 @@ bit-identical to feeding the detections straight through:
     detections -> build_control        ==  detections -> interp@1 -> build_control
     draw(detected dicts)               ==  draw(interp@1 dicts)
 If this holds, pilot system differences are method differences by construction
-(all pilot systems share one detection pass inside 11_lowfps_generate).
+(all pilot systems share one detection pass inside lowfps_generate).
 
 GATE B (informational): detect_video_full vs the original get_video_pose --
 run as two INDEPENDENT detection passes, so any mismatch here measures ONNX-GPU
@@ -29,7 +29,7 @@ import inference_ctrl as IC
 from lib_lowfps import detect_video_full, draw_sequence, interp_pose_dicts, person0
 from importlib import import_module
 
-lowfps_gen = import_module("11_lowfps_generate")
+lowfps_gen = import_module("lowfps_generate")
 
 
 def check(name, ok, detail=""):
