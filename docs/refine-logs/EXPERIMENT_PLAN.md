@@ -8,7 +8,7 @@
 
 ## 前情摘要(为何主战场在 video-level)
 
-- pose-level 去噪已被自己的实验否掉:真实 DWPose 抖动仅 2–3px(relative≈0.12),learned-INR 输给线性插值 2.7×(domain gap),真实改训撞数据墙(`docs/experiments/step1_real_validation.md`)。
+- pose-level 去噪已被自己的实验否掉:真实 DWPose 抖动仅 2–3px(relative≈0.12),learned-INR 输给线性插值 2.7×(domain gap),真实改训撞数据墙(`docs/experiments/round1_archive/step1_real_validation.md`)。
 - Video probe(job 结果 `step1_video_probe.json`):motion-field 分支**传导到输出视频**(warp_error 随注入抖动单调 +10.6% @ σ=32),但敏感度低(rel_div 2.4%),线性外推到真实噪声 σ≈3 只有 ~1% 变化 → **"去噪"claim 在 video-level 也没有头寸,必须换打法**。
 - 新打法:打 baseline **结构性缺席/结构性退化**的场景 —— 低 fps 驱动与任意帧率生成。stride 越大,有限差分越粗、离散 skeleton 越稀,连续表示的优势才是结构性的,不靠噪声头寸。
 

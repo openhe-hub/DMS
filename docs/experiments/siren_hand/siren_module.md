@@ -8,7 +8,7 @@
 >
 > 历史注记:本文件 2026-06 的旧版描述的是"FiLMSIREN 替换 body 运动场差分+高斯"
 > 方案,该路线连同 step1/step2 已按预注册 gate 终止(结论见
-> [`../idea/siren_idea.md`](../idea/siren_idea.md) TL;DR;旧文档在 git 历史)。
+> [`../../idea/siren_idea.md`](../../idea/siren_idea.md) TL;DR;旧文档在 git 历史)。
 > 本版是重启后的手部通道路线,**已交付、未判死**。
 
 ---

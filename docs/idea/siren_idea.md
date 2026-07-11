@@ -5,7 +5,7 @@
 > 日期：2026-06（基于本地复现的 DisPose 仓库）。
 > ⚠️ 本文档记录的是**第一轮(body 信号精化)路线**,其判死结论见下方 TL;DR;
 > 旧版模块/实验文档在 git 历史。**2026-07 重启的手部通道路线已交付且存活**,
-> 现役文档见 [`../experiments/siren_module.md`](../experiments/siren_module.md)。
+> 现役文档见 [`../experiments/siren_hand/siren_module.md`](../experiments/siren_hand/siren_module.md)。
 
 ---
 
@@ -13,9 +13,9 @@
 
 > **⚰️ 最终结论（2026-07-02,step2 video-level pilot 后）:idea 已按预注册 gate 判死。**
 > 完整证据链:① 去噪打法死于 step1(真实 DWPose 抖动仅 2–3px,learned-INR 输给线性插值,
-> 见 `../experiments/step1_real_validation.md`);② 时域超分/低fps打法死于 step2 pilot
+> 见 `../experiments/round1_archive/step1_real_validation.md`);② 时域超分/低fps打法死于 step2 pilot
 > (RIFE 后处理 mid-PSNR 6/6 全胜控制侧连续化;linear≈spline≈siren,INR 垫底,
-> 见 `../experiments/step2_video_level.md`)。
+> 见 `../experiments/round1_archive/step2_video_level.md`)。
 > 根本机制:**扩散的控制跟随误差 >> 控制信号的时间/噪声精度误差**——
 > pose 控制信号侧的任何精化在 video-level 都是二阶小量。此结论对"更好的 motion field"
 > 这一整类 idea 都成立,不止 SIREN。
@@ -93,4 +93,4 @@ DisPose 算稀疏 motion field 的两步，恰好是 NIAF 点名批判的：
 
 > （本节"下一步"即后来 step1/step2 跑死的路线,仅存档。现役 SIREN 模块 =
 > 手部通道路线,架构/接入/交付数据 →
-> [`../experiments/siren_module.md`](../experiments/siren_module.md)）
+> [`../experiments/siren_hand/siren_module.md`](../experiments/siren_hand/siren_module.md)）

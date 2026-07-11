@@ -2,8 +2,8 @@
 
 > 动机:step2 判死控制侧后,攻扩散采样侧——RIFE 唯一可见弱点是快运动插值涂抹;
 > 让中间帧"被生成"而非"被插值",每步去噪用 flow-warp 的关键帧信息软约束。
-> 预注册计划见 `../refine-logs/EXPERIMENT_PLAN.md` Step3 节;查新见
-> `../idea/step3_sampling_fusion_novelty.md`。日期 2026-07-03,总花费 <1.5 GPU-h。
+> 预注册计划见 `../../refine-logs/EXPERIMENT_PLAN.md` Step3 节;查新见
+> `../../idea/step3_sampling_fusion_novelty.md`。日期 2026-07-03,总花费 <1.5 GPU-h。
 
 ## 方法(training-free,零侵入)
 

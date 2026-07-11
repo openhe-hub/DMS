@@ -2,8 +2,8 @@
 
 > 主 claim 从"去噪"(已被 step1 + video probe 判死)切换为**"pose 控制时域超分"**:
 > 低帧率驱动 pose → 连续轨迹表示重建全帧率控制信号 → 全帧率视频,vs 离散管线结构性退化。
-> 计划见 [`../refine-logs/EXPERIMENT_PLAN.md`](../refine-logs/EXPERIMENT_PLAN.md),
-> 运行记录见 [`../refine-logs/EXPERIMENT_TRACKER.md`](../refine-logs/EXPERIMENT_TRACKER.md)。
+> 计划见 [`../../refine-logs/EXPERIMENT_PLAN.md`](../../refine-logs/EXPERIMENT_PLAN.md),
+> 运行记录见 [`../../refine-logs/EXPERIMENT_TRACKER.md`](../../refine-logs/EXPERIMENT_TRACKER.md)。
 > 日期:2026-07。环境:Jubail A100。
 
 ---
