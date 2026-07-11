@@ -19,10 +19,10 @@ Downstream evaluations live under `docs/experiments/` and are interchangeable ‚Ä
 | `src/metrics/` | quantitative evaluation library (pose fidelity, hand confidence, CSIM, FVD) |
 | `scripts/step{1,2,3}/`, `scripts/slurm/` | experiment pipelines + cluster launchers |
 | `docs/idea/`, `docs/experiments/` | motivation, novelty checks, and experiment records |
-| `docs/dispose_upstream_readme.md` | **base DisPose setup, model weights, and inference usage** |
+| `docs/dispose_origin.md` | **base DisPose setup, model weights, and inference usage** |
 
 For installing the environment, downloading model weights, and running inference, see the
-base method's instructions in [`docs/dispose_upstream_readme.md`](docs/dispose_upstream_readme.md).
+base method's instructions in [`docs/dispose_origin.md`](docs/dispose_origin.md).
 
 ## üîç Citation
 
