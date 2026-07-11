@@ -41,7 +41,7 @@ if [ "$MODE" = "check" ]; then
   python scripts/hand_pilot/41_equiv_check_hands.py --mode real \
     --config configs/test_sign_hard27k.yaml --case 0
   echo "===== original step2 equivalence gate must still PASS ====="
-  python scripts/step2/12_equiv_check.py --config configs/test.yaml --case 1
+  python scripts/round1_archive/step2/12_equiv_check.py --config configs/test.yaml --case 1
   echo "CHECK DONE"
 elif [ "$MODE" = "inspect" ]; then
   python scripts/hand_pilot/42_gate_a_inspect.py --stage extract

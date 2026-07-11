@@ -14,9 +14,9 @@ This matches the prior to real motion statistics instead of synthetic sines.
 import numpy as np
 import torch
 
-from . import N_FRAMES
+from .. import N_FRAMES
 from .models import FiLMSIREN, velocity
-from .baselines import _smooth
+from ..baselines import _smooth
 
 
 def real_train(train_windows, epochs=600, lr=1e-3, vel_w=0.5, weight_decay=1e-4,

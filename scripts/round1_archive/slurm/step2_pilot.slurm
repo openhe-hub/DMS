@@ -34,10 +34,10 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 cd "$REPO"
 
 # R001 gate: stride-1 equivalence must PASS before any pilot generation
-python scripts/step2/12_equiv_check.py --case "$CASE"
+python scripts/round1_archive/step2/12_equiv_check.py --case "$CASE"
 
 # R011: paired self-driven runs (shared detection/DIFT/CMP/seed inside)
-python scripts/step2/11_lowfps_generate.py --case "$CASE" --skip_existing \
+python scripts/round1_archive/step2/11_lowfps_generate.py --case "$CASE" --skip_existing \
   --siren_w0 "$W0" --siren_lam "$LAM" \
   --runs orig:1 orig:4 orig:8 linear:4 linear:8 spline:4 spline:8 siren:4 siren:8
 

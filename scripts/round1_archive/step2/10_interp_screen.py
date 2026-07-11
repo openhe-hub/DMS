@@ -27,11 +27,11 @@ import _paths  # noqa: F401
 from _paths import FIG_DIR, TRAJ_DIR, CKPT_DIR
 
 from dispose_siren import baselines as B
-from dispose_siren import normalize as Z
-from dispose_siren.eval_protocols import make_windows
-from dispose_siren.interp import natural_cubic_pos, perclip_fit_decode
-from dispose_siren.train import load_ckpt
-from dispose_siren.trajectory import load_npz
+from dispose_siren.round1 import normalize as Z
+from dispose_siren.round1.eval_protocols import make_windows
+from dispose_siren.round1.interp import natural_cubic_pos, perclip_fit_decode
+from dispose_siren.round1.train import load_ckpt
+from dispose_siren.round1.trajectory import load_npz
 
 N_OBS = 16
 

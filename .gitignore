@@ -154,6 +154,7 @@ cython_debug/
 # custom ignores
 .DS_Store
 _.*
+.claude/
 
 # models and outputs
 pretrained_weights/

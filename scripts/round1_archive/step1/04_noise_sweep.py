@@ -16,9 +16,9 @@ import torch
 
 import _paths  # noqa: F401
 from _paths import TRAJ_DIR, CKPT_DIR, FIG_DIR
-from dispose_siren.trajectory import load_npz
-from dispose_siren.train import load_ckpt
-from dispose_siren.eval_protocols import make_windows, protocol_holdout, protocol_pseudogt
+from dispose_siren.round1.trajectory import load_npz
+from dispose_siren.round1.train import load_ckpt
+from dispose_siren.round1.eval_protocols import make_windows, protocol_holdout, protocol_pseudogt
 
 
 def main():

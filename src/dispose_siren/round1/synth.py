@@ -9,7 +9,7 @@ per-trajectory z-score (mean/std over the observed frames) so the learned prior
 is SCALE-INVARIANT and transfers to real DWPose trajectories of any keypoint.
 """
 import numpy as np
-from . import N_FRAMES, DENSE_T
+from .. import N_FRAMES, DENSE_T
 
 TF = np.linspace(0, 1, N_FRAMES)     # observed (sparse) frame times
 TG = np.linspace(0, 1, DENSE_T)      # dense evaluation grid

@@ -28,13 +28,13 @@ nvidia-smi || true
 python -c "import onnxruntime as ort; print('ORT providers:', ort.get_available_providers())"
 
 echo "===== 1.1 extract real DWPose trajectories ====="
-python scripts/step1/01_extract_trajectories.py --stride 1
+python scripts/round1_archive/step1/01_extract_trajectories.py --stride 1
 
 echo "===== 1.2 train scale-invariant amortized FiLM-SIREN + synthetic sanity ====="
-python scripts/step1/02_train_amortized.py --epochs 400 --ntr 2000
+python scripts/round1_archive/step1/02_train_amortized.py --epochs 400 --ntr 2000
 
 echo "===== 1.3 evaluate on real trajectories (both protocols) ====="
-python scripts/step1/03_eval_real.py --span 48 --step 24
+python scripts/round1_archive/step1/03_eval_real.py --span 48 --step 24
 
 echo "===== done ====="
 find "$REPO/outputs/step1" -type f | sort

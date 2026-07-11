@@ -10,7 +10,7 @@ import os
 
 import _paths  # noqa: F401  (sets sys.path + dirs)
 from _paths import REPO, TRAJ_DIR
-from dispose_siren.trajectory import extract_dense_trajectory, save_npz
+from dispose_siren.round1.trajectory import extract_dense_trajectory, save_npz
 
 
 def main():

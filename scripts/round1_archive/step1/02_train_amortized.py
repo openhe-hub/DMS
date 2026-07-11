@@ -14,10 +14,10 @@ import torch
 import _paths  # noqa: F401
 from _paths import CKPT_DIR
 from dispose_siren import N_FRAMES
-from dispose_siren.synth import sample_traj, TF, TG
+from dispose_siren.round1.synth import sample_traj, TF, TG
 from dispose_siren import baselines as B
-from dispose_siren import normalize as Z
-from dispose_siren.train import train_amortized, save_ckpt
+from dispose_siren.round1 import normalize as Z
+from dispose_siren.round1.train import train_amortized, save_ckpt
 
 
 def synthetic_sanity(model, device, sigmas=(3, 6, 12, 20), nte=200, seeds=3):

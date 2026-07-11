@@ -17,7 +17,7 @@ import torch.nn.functional as F
 
 import _paths  # noqa: F401
 
-from dispose_siren.interp import natural_cubic_pos, perclip_fit_decode
+from dispose_siren.round1.interp import natural_cubic_pos, perclip_fit_decode
 
 
 # --------------------------------------------------------------- detection

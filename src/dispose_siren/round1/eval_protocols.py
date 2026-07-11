@@ -18,9 +18,9 @@ All velocities are expressed per unit-tau (displacement scale across the window)
 so methods on the N-frame grid and pseudo-GT on the span grid are comparable.
 """
 import numpy as np
-from . import N_FRAMES, DENSE_T
+from .. import N_FRAMES, DENSE_T
 from .synth import TG
-from . import baselines as B
+from .. import baselines as B
 from . import normalize as Z
 
 VEL_GRID = (0.6, 0.9, 1.2, 1.6, 2.2, 3.0)

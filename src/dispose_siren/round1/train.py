@@ -10,7 +10,7 @@ across the unknown real DWPose jitter level.
 """
 import numpy as np
 import torch
-from . import N_FRAMES, DENSE_T
+from .. import N_FRAMES, DENSE_T
 from .synth import sample_traj, TF, TG
 from .models import FiLMSIREN, velocity
 from .normalize import zscore_stats

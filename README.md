@@ -4,7 +4,7 @@ A research fork for controllable human video generation that combines three comp
 
 1. **MimicMotion** — the video-diffusion animation backbone ([repo](https://github.com/Tencent/MimicMotion)).
 2. **DisPose** — training-free pose-guidance disentanglement layered on that backbone, turning a sparse skeleton into motion-field guidance + keypoint correspondence ([paper](https://arxiv.org/abs/2412.09349), arXiv:2412.09349).
-3. **SIREN / INR motion representation** — an exploration that grafts continuous, periodic-activation implicit neural representations ([SIREN paper](https://arxiv.org/abs/2006.09661), arXiv:2006.09661) onto DisPose's pose-trajectory / motion-field control signal. Code in `src/dispose_siren/` and `scripts/step{1,2,3}/`; motivation and pre-registered findings in `docs/idea/` and `docs/experiments/`.
+3. **SIREN / INR motion representation** — an exploration that grafts continuous, periodic-activation implicit neural representations ([SIREN paper](https://arxiv.org/abs/2006.09661), arXiv:2006.09661) onto DisPose's pose-trajectory / motion-field control signal. Live hand-channel route in `src/dispose_siren/` + `scripts/hand_pilot/` (delivered results: `docs/experiments/siren_hand/siren_module.md`); round-1 negative results archived in `scripts/round1_archive/` + `docs/experiments/round1_archive/`.
 
 Downstream evaluations live under `docs/experiments/` and are interchangeable — e.g. a sign- and hand-fidelity stress test (`docs/experiments/baseline/`, with `qualitative.md` + `quantitative.md`) on ASL50K is one such experiment and can be swapped for other downstream datasets.
 
@@ -17,7 +17,8 @@ Downstream evaluations live under `docs/experiments/` and are interchangeable �
 | `mimicmotion/` | animation backbone + DisPose control + DWPose (incl. the graft pose-retarget module) |
 | `src/dispose_siren/` | SIREN / INR motion-representation exploration |
 | `src/metrics/` | quantitative evaluation library (pose fidelity, hand confidence, CSIM, FVD) |
-| `scripts/step{1,2,3}/`, `scripts/slurm/` | experiment pipelines + cluster launchers |
+| `scripts/hand_pilot/`, `scripts/slurm/` | live experiment pipeline + cluster launchers |
+| `scripts/round1_archive/` | frozen round-1 pipelines (killed route) |
 | `docs/idea/`, `docs/experiments/` | motivation, novelty checks, and experiment records |
 | `docs/dispose_origin.md` | **base DisPose setup, model weights, and inference usage** |
 

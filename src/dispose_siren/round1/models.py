@@ -10,7 +10,7 @@ interpolate noise (which is why per-clip test-time SIREN fitting fails).
 import numpy as np
 import torch
 import torch.nn as nn
-from . import N_FRAMES
+from .. import N_FRAMES
 
 
 class FiLMSIREN(nn.Module):

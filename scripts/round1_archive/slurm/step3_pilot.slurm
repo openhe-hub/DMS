@@ -34,31 +34,31 @@ cd "$REPO"
 
 if [ "$MODE" = "dev" ]; then
   # R101 round 1: latent-space blend (FAILED G2: LPIPS 2x worse / early-window collapse)
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
     --alpha 0.15 --win_lo 0.3 --win_hi 0.9 --dev_tag a15w0309 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
     --alpha 0.30 --win_lo 0.3 --win_hi 0.9 --dev_tag a30w0309 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
     --alpha 0.15 --win_lo 0.0 --win_hi 0.7 --dev_tag a15w0007 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space latent \
     --alpha 0.30 --win_lo 0.0 --win_hi 0.7 --dev_tag a30w0007 --skip_existing
-  python scripts/step3/23_bucket_metrics.py --cases "$CASE" --strides 8 \
+  python scripts/round1_archive/step3/23_bucket_metrics.py --cases "$CASE" --strides 8 \
     --dev_glob 'fusion_s8_a*'
 elif [ "$MODE" = "dev2" ]; then
   # R101 round 2: x0-space fusion (exact Euler recompute, noise stats untouched)
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
     --alpha 0.30 --win_lo 0.0 --win_hi 0.85 --dev_tag x0a30w0085 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
     --alpha 0.60 --win_lo 0.0 --win_hi 0.85 --dev_tag x0a60w0085 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
     --alpha 0.30 --win_lo 0.3 --win_hi 0.85 --dev_tag x0a30w0385 --skip_existing
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 8 --space x0 \
     --alpha 0.60 --win_lo 0.3 --win_hi 0.85 --dev_tag x0a60w0385 --skip_existing
-  python scripts/step3/23_bucket_metrics.py --cases "$CASE" --strides 8 \
+  python scripts/round1_archive/step3/23_bucket_metrics.py --cases "$CASE" --strides 8 \
     --dev_glob 'fusion_s8_x0*'
 else
   # R102: frozen config, both strides
-  python scripts/step3/21_fusion_generate.py --case "$CASE" --strides 4 8 \
+  python scripts/round1_archive/step3/21_fusion_generate.py --case "$CASE" --strides 4 8 \
     --alpha "$A" --win_lo "$LO" --win_hi "$HI" --skip_existing
 fi
 
