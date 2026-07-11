@@ -174,6 +174,8 @@ MimicMotion 靠 smooth-but-wrong 手得高分);且效应部分是定义性的—
 
 产物:`outputs/metrics_siren/`(单 seed)、`outputs/metrics_siren_best/`
 (终版)、生成视频在集群 `outputs/sign_siren_full|_reroll|_best/`。
+配套定性 grid figure(vs MimicMotion,8 词条同时刻三画幅):
+[`qualitative.md`](qualitative.md)。
 
 ## 6. 复现笔记
 

@@ -115,3 +115,54 @@ motivation material for the SIREN/step3 direction.
    identity-specific;
 4. Return to the SIREN/step3 main line, using **DisPose + graft** as the baseline
    to build on.
+
+## 7. Experiment 3: hard27k 15-clip run + MimicMotion failure grid (2026-07-05)
+
+Fulfils the scale half of §6-1, with asl27k contested-review words instead of
+how2sign (harder content, and the same pool the later 109-clip quantitative run
+draws from). Recorded retroactively 2026-07-11 — the run originally lived only
+on the huawei disk.
+
+**Protocol**: 15 hard-case clips (asl27k rejected-review words, sources
+committed at `assets/example_data/sign_videos/hard27k_orig/`), original signer
+videos (640×360 @29.97) as driver, `test2.jpg` reference, stride 1 / fps 30 /
+CFG 2.0 / 25 steps / 576 / seed 42 — the aligned §4 protocol. DisPose+graft via
+`configs/test_sign_hard27k.yaml` (5 clips) + `_b2.yaml` (10 more) on jubail
+(outputs `20260705_test_sign_hard27k*`); MimicMotion sign version on jubail2
+(`zhewen_cmp/outputs_hard27k_orig*`). These 15 are the first batch of the 109
+used in `quantitative.md` (`_c1..c4` complete the set).
+
+**Deliverables** (`outputs/sign_cmp_hard27k/`, synced huawei → Mac 2026-07-11):
+15 three-panel `cmp_*.mp4` (Source | MimicMotion | DisPose graft), single-model
+raw outputs under `raw/{dispose,mimicmotion}/`, and the failure grid
+`figs/mm_failures_grid.png` (also committed at
+[`figs/mm_failures_grid.png`](figs/mm_failures_grid.png)):
+
+![MimicMotion failure grid](figs/mm_failures_grid.png)
+
+8 hand-picked source-frame instants, three panels each; word ↦ clip:frame =
+vulcanise `0bsujxxpwd:425`, lethargic `07imqjgcxc:99`, cowboy `05tcw2nou9:64`,
+open book `0byrxo0heb:56`, backlight `0db3uk2cqw:150`, hump `0bcxsenqga:174`,
+turn off (tv) `0ihmqp5iz6:28`, grade `0ejbehccd4:23`. Frames were extracted
+from the cmp videos with an ad-hoc ffmpeg script (huawei session, not kept);
+the protocol is now codified in `scripts/hand_pilot/make_qual_grid.py`, which
+rebuilds the same layout with the SIREN system as the third panel (see
+`../siren_hand/qualitative.md`).
+
+**MimicMotion failure taxonomy visible in the grid** (DisPose+graft shows none
+of these):
+
+1. **Text/watermark artifact bursts** — dense blue glyph clusters erupt around
+   the subject (vulcanise, lethargic, grade); the source corpus' watermark
+   memorized and re-emitted.
+2. **Source-background leakage** — the whole background flips to the driver's
+   blue backdrop (open book).
+3. **Hallucinated objects** — a yellow card-like object materializes in the
+   hand (backlight).
+4. **Arm stumps** — forearms amputate into skin-colored stubs (lethargic).
+5. **Blob/claw hands under motion** — fingers fuse or smear on fast frames
+   (cowboy, hump, turn off), consistent with §4's finding.
+
+This is the qualitative ground the FVD gap (830 vs 907, `quantitative.md`)
+stands on, and the per-failure quantification backlog there (OCR text-artifact
+rate, background leakage) indexes exactly failures 1–2.

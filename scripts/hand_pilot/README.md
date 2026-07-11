@@ -22,6 +22,8 @@ gate_a_inspect.py       生成视频 DWPose 提取(--stage extract, 集群)
                            + 多臂裁块对比图/配对诊断(--stage report, --arms/--tag)
 reconstruct_hands.py    SIREN 滑窗重建手轨迹 → hands_recon/(喂 hand_recon_dir)
 select_best.py          best-of-N 按手部 conf 选优 → sign_siren_best/
+make_qual_grid.py       [本地] 定性 grid figure(Source|MM|SIREN 2x4)
+                           → sign_cmp_hard27k/figs/mm_vs_siren_grid.png
 ```
 
 ## slurm 对应(scripts/slurm/)
