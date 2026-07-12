@@ -74,6 +74,36 @@ bbox 中心 SavGol(窗9, poly2)+ 顶点/相机平移 SavGol(窗11, poly3)替代 
 raw cam_t 加速度达米级/帧²,证实相机平移是主要抖源。目检无滞后错位。
 平滑版输出在本地 `outputs/omnihand/smooth/`。
 
+## 2D 关键点导出——回接 DisPose 链路(2026-07-12)
+
+动机:DisPose 用 DWPose 提 2D 手部关键点,检测不准时用 OmniHands 的 3D 恢复
+再**投影回 2D** 送回原链路。转换脚本
+[`omnihand_to_dwpose.py`](../../../scripts/thirdparty/omnihand/omnihand_to_dwpose.py)
+(runner [`omnihand_kps.sh`](../../../scripts/thirdparty/omnihand/omnihand_kps.sh),
+omhand 环境登录节点 CPU 即可,4 视频约 1 分钟):
+
+- 关节回归与 `hands_4d/models/mano_wrapper.py` 完全一致:MANO `J_regressor`
+  16 关节 + 5 指尖顶点,按 `mano_to_openpose` 重排——**即 DWPose 的
+  COCO-WholeBody 手部顺序,一一对应**。右手 J_regressor 对左手同样成立
+  (左手顶点是镜像的右手网格,回归是线性的)。
+- 投影用渲染同款针孔相机:`f = 5000/256 × max(W,H)`,主点图像中心——mesh
+  overlay 目检贴合即保证投影像素级正确。
+- 输出与 hand_pilot SIREN arm 的 `hands_recon` npz 同格式:
+  `{hands[T,2,21,2] 归一化(0=左,1=右), hands_score=0.61, covered[T,2]}`,
+  可直接走 `mimicmotion/dwpose/preprocess.py` 的 `hand_override` /
+  `hand_recon_dir` 注入口,DisPose 侧零改动。
+
+结果(4 视频,`outputs/omnihand/kps/`,叠加视频 `kps_<vname>.mp4` + npz):
+投影点在画面内 95.8–100%;慢动作帧手指级对齐;快速挥动+运动模糊帧骨架滞后于
+真手——**raw 与 smoothed 投影偏移相同**(`kps_video1_raw.mp4` 对照),说明滞后
+来自 OmniHands 时序融合(gap=10)本身而非 SavGol。后续融合策略:按 DWPose
+置信度门控,高置信帧保留 DWPose,低置信/缺失帧用 OmniHands 投影补。
+
+坑:**登录节点有线程数上限**,torch/BLAS 默认开满线程会
+`libgomp: Thread creation failed` 甚至段错误(报成 `numpy._core.multiarray
+failed to import` 的假 ABI 错)→ runner 里
+`export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1`。
+
 ## Jubail SSH 操作铁律(本次血泪)
 
 - `jubail` / `jubail-ts` 两条路由都会间歇抽风(banner 超时 / exec request failed),所有操作用双路由 for 循环重试 + `-o ControlPath=none`(复用 socket 会坏)。
