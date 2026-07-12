@@ -6,7 +6,11 @@
 ## 结论
 
 推理 demo 在 Jubail 上端到端跑通:手语视频 + 舞蹈视频共 4 段,输出渲染视频中
-左手(粉)/右手(青)MANO 网格与手势贴合准确。
+左手(紫)/右手(青)MANO 网格与手势贴合准确。
+
+> 渲染颜色改动:上游左手默认粉色,在肤色/粉色衣物上不可辨,已把
+> `run_demo.py` 顶部 `LIGHT_RED` 改为 `(0.58, 0.24, 1.0)`(亮紫)。
+> `thirdparty/` 不进 git,重新 clone 后需重打这一行补丁(本地和 jubail 均已改)。
 
 **结果统一放在本地 `outputs/omnihand/`(gitignore,不进 git)**:各视频的
 `video_<vname>.mp4` 双手网格 overlay 渲染 + `verify_frame.png` 验证帧;
