@@ -5,11 +5,12 @@
 
 ## 结论
 
-推理 demo 在 Jubail 上端到端跑通。输入 DisPose 自带手语视频
-`assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4`(192 帧),
-输出渲染视频中左手(粉)/右手(青)MANO 网格与手势贴合准确:
+推理 demo 在 Jubail 上端到端跑通:手语视频 + 舞蹈视频共 4 段,输出渲染视频中
+左手(粉)/右手(青)MANO 网格与手势贴合准确。
 
-![验证帧](figs/verify_frame.png)
+**结果统一放在本地 `outputs/omnihand/`(gitignore,不进 git)**:各视频的
+`video_<vname>.mp4` 双手网格 overlay 渲染 + `verify_frame.png` 验证帧;
+远程原件在 jubail `thirdparty/omnihand/demo_out/`。
 
 ## 位置
 
@@ -20,7 +21,8 @@
 | conda 环境 | `omhand`(`/scratch/zl6890/miniconda`,python 3.10,torch 2.0.1+cu118) |
 | setup 脚本(幂等,可整体重跑) | 远程 `/scratch/zl6890/zhewen/omnihand_setup.sh`,存档 [`scripts/thirdparty/omnihand/omnihand_setup.sh`](../../../scripts/thirdparty/omnihand/omnihand_setup.sh) |
 | Slurm 作业脚本 | 远程 `/scratch/zl6890/zhewen/omnihand_demo.sbatch`,存档 [`scripts/thirdparty/omnihand/omnihand_demo.sbatch`](../../../scripts/thirdparty/omnihand/omnihand_demo.sbatch) |
-| 输出 | 远程 `thirdparty/omnihand/demo_out/video_<vname>.mp4` + `<vname>/bbox.json` |
+| 输出(远程原件) | `thirdparty/omnihand/demo_out/video_<vname>.mp4` + `<vname>/bbox.json` |
+| 输出(本地副本) | `outputs/omnihand/`(gitignore) |
 
 ## 权重与数据(全部已就位)
 

@@ -20,19 +20,31 @@ export PYOPENGL_PLATFORM=egl
 nvidia-smi
 python -c "import torch; print('cuda avail:', torch.cuda.is_available(), torch.cuda.get_device_name(0))"
 
-VIDEO=/scratch/zl6890/zhewen/DisPose/assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+EX=/scratch/zl6890/zhewen/DisPose/assets/example_data
+VIDEOS=(
+  "$EX/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4"
+  "$EX/sign_videos/1aRNY8wFqa0_32-8-rgb_front_8s.mp4"
+  "$EX/sign_videos/DI6T6tbk3r0_15-5-rgb_front_8s.mp4"
+  "$EX/videos/video1.mp4"
+)
 
-# upstream bug: run_demo writes demo_out/<vname>/bbox.json without creating the dir
-VNAME=$(basename "$VIDEO" .mp4)
-mkdir -p "./demo_out/$VNAME"
+for VIDEO in "${VIDEOS[@]}"; do
+    VNAME=$(basename "$VIDEO" .mp4)
+    if [ -s "./demo_out/video_${VNAME}.mp4" ]; then
+        echo "SKIP $VNAME (already done)"
+        continue
+    fi
+    # upstream bug: run_demo writes demo_out/<vname>/bbox.json without creating the dir
+    mkdir -p "./demo_out/$VNAME"
+    python run_demo.py \
+        --checkpoint ./checkpoints/Demo_Video.pth \
+        --cfg ./checkpoints/config_video.yaml \
+        --video_dir "$VIDEO" \
+        --out_dir ./demo_out \
+        --gpu 0 \
+        --mode video
+    echo "DONE $VNAME EXIT=$?"
+done
 
-python run_demo.py \
-    --checkpoint ./checkpoints/Demo_Video.pth \
-    --cfg ./checkpoints/config_video.yaml \
-    --video_dir "$VIDEO" \
-    --out_dir ./demo_out \
-    --gpu 0 \
-    --mode video
-
-echo "EXIT_CODE=$?"
-ls -laR ./demo_out | head -50
+echo "ALL_VIDEOS_DONE"
+ls -la ./demo_out/
