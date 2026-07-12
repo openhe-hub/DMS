@@ -168,3 +168,5 @@ outputs/
 
 # Replicate
 .cog
+# Third-party clones at repo root (docs live in docs/thirdparty/)
+/thirdparty/

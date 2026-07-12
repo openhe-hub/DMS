@@ -21,6 +21,7 @@ Downstream evaluations live under `docs/experiments/` and are interchangeable â€
 | `scripts/round1_archive/` | frozen round-1 pipelines (killed route) |
 | `docs/idea/`, `docs/experiments/` | motivation, novelty checks, and experiment records |
 | `docs/dispose_origin.md` | **base DisPose setup, model weights, and inference usage** |
+| `thirdparty/omnihand/`, `docs/thirdparty/omnihand/` | OmniHands (TOG 2026) clone + Jubail reproduction guide ([reproduction.md](docs/thirdparty/omnihand/reproduction.md)) |
 
 For installing the environment, downloading model weights, and running inference, see the
 base method's instructions in [`docs/dispose_origin.md`](docs/dispose_origin.md).
