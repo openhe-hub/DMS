@@ -58,6 +58,22 @@ ssh jubail 'bash -lc "sbatch /scratch/zl6890/zhewen/omnihand_demo.sbatch"'
 
 另:登录节点 `import pyrender` 必报 `Unable to load OpenGL library`——属预期(无 GL),计算节点上 `PYOPENGL_PLATFORM=egl` 正常渲染;`ckpt 加载时大量 `unexpected key ... mlp.experts.*` 警告是 ViTPose+ MoE 权重载入普通 ViT 的正常现象,可忽略。
 
+## 去抖实验(2026-07-12,job 16675946)
+
+上游视频模式抖动严重(已提 [issue #9](https://github.com/LinDixuan/OmniHands/issues/9)):
+bbox 中心不平滑、时序序列 gap=10、`seq_smooth` 只对顶点做 70/30 弱混合且**完全不平滑相机平移**。
+
+修复(`run_demo.py` 补丁,`OMNIHAND_SMOOTH=savgol` 环境变量开关,默认行为不变):
+bbox 中心 SavGol(窗9, poly2)+ 顶点/相机平移 SavGol(窗11, poly3)替代 seq_smooth,
+并 dump 平滑前后轨迹到 `<vname>/traj.npz`。作业脚本
+[`omnihand_demo_smooth.sbatch`](../../../scripts/thirdparty/omnihand/omnihand_demo_smooth.sbatch)
+(复用 baseline 的 bbox 缓存,4 视频 5min43s),指标脚本
+[`jitter_metric.py`](../../../scripts/thirdparty/omnihand/jitter_metric.py)。
+
+结果(逐帧二阶差分加速度均值,4 视频):**顶点抖动 ↓74–84%,相机平移抖动 ↓80–83%**;
+raw cam_t 加速度达米级/帧²,证实相机平移是主要抖源。目检无滞后错位。
+平滑版输出在本地 `outputs/omnihand/smooth/`。
+
 ## Jubail SSH 操作铁律(本次血泪)
 
 - `jubail` / `jubail-ts` 两条路由都会间歇抽风(banner 超时 / exec request failed),所有操作用双路由 for 循环重试 + `-o ControlPath=none`(复用 socket 会坏)。
