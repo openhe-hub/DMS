@@ -22,6 +22,12 @@
 3. **off vs full 手部质量同级**(逐帧并排图 + off vs full 并排视频在 `outputs/omnihand/fusion/cmp/arms/`;清晰度调优素材——手部/脸部放大裁剪、576 vs 768 并排——在 `cmp/sharpness/`):easy 内容上 OmniHands 投影驱动的生成不劣于 DWPose 原生。**推论:门控偏灵敏是安全的**——即使误替换了好帧,质量也不掉。
 4. 修复价值的真正战场在 hard27k:用缓存 DWPose 轨迹测算,8 段 gate-A 片段上 0.3 门控触发率 **28.2%**(单段最高 55%,`0ddpfhlmff` 左手 139/142 帧低置信)。
 
+## 后续:清晰度工程调优(2026-07-13,已完成)
+
+手部发糊的根因与调参结论见 [sharpness_tuning.md](../../experiments/sharpness_tuning.md)
+——推荐配置 768 + cfg3.0 + tile32/ovl8,手部锐度较 576 基线 +155%。
+后续所有生成实验应基于该配置。
+
 ## 下一步(待定)
 
 - 在 hard27k gate-A 片段上重跑三 arm(需先给这些片段跑 OmniHands 推理 + kps 导出)。
