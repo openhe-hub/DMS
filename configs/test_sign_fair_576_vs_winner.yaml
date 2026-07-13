@@ -1,0 +1,61 @@
+# Fair 576-vs-winner comparison: head_blend_ratio 0 pins the face to the ref
+# image (fixed expression) in ALL cases, removing the expression confound.
+# Case 3 = winner config + OmniHands full hand override (savgol-smoothed).
+base_model_path: ./pretrained_weights/stable-video-diffusion-img2vid-xt-1-1
+dift_model_path: ./pretrained_weights/stable-diffusion-v1-5
+
+ckpt_path: ./pretrained_weights/MimicMotion_1-1.pth
+controlnet_path: ./pretrained_weights/DisPose.pth
+
+test_case:
+  # 1) 576 baseline, fixed face
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0
+    num_frames: 16
+    resolution: 576
+    frames_overlap: 6
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 2.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42
+
+  # 2) winner (768 + cfg3 + tile32/ovl8), fixed face
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42
+
+  # 3) winner + OmniHands full hand override, fixed face
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0
+    hand_recon_dir: ./outputs/omnihand_kps
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42

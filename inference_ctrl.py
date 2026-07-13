@@ -84,7 +84,8 @@ def load_ref_image(image_path, resolution=576):
 def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_stride=2,
                kp_noise=0.0, kp_noise_seed=0, max_frames=None, graft=False,
                hand_flow=False, hand_flow_smooth=0.0, hand_conf_thr=0.3,
-               hand_kp_subset="all", hand_recon_dir="", hand_flow_gain=1.0):
+               hand_kp_subset="all", hand_recon_dir="", hand_flow_gain=1.0,
+               head_blend_ratio=0.15):
     """preprocess ref image pose and video pose
 
     Args:
@@ -130,10 +131,11 @@ def preprocess(video_path, image_path, dift_model_path, resolution=576, sample_s
                         f"(covered {z['covered'].mean():.0%})")
         video_pose, body_point, face_point, hand_point = get_video_pose(
             video_path, image_pixels, sample_stride=sample_stride, graft=graft,
+            head_blend_ratio=head_blend_ratio,
             return_hands=True, hand_override=hand_override)
     else:
         video_pose, body_point, face_point = get_video_pose(video_path, image_pixels, sample_stride=sample_stride,
-                                                            graft=graft)
+                                                            graft=graft, head_blend_ratio=head_blend_ratio)
     body_point_list = [ref_point_body] + body_point
     face_point_list = [ref_point_head] + face_point
 
@@ -307,7 +309,8 @@ def main(args):
             hand_conf_thr=task.get("hand_conf_thr", 0.3),
             hand_kp_subset=task.get("hand_kp_subset", "all"),
             hand_recon_dir=task.get("hand_recon_dir", ""),
-            hand_flow_gain=task.get("hand_flow_gain", 1.0)
+            hand_flow_gain=task.get("hand_flow_gain", 1.0),
+            head_blend_ratio=task.get("head_blend_ratio", 0.15)
         )
         ########################################### Run MimicMotion pipeline ###########################################
         _video_frames = run_pipeline(
