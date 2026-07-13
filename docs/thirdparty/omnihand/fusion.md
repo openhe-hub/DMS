@@ -29,5 +29,5 @@
 
 ## 运维备注
 
-- jubail DisPose 仓库的 `origin` 是上游 `lihxxx/DisPose`,与私有 hub(openhe-hub/DMS)不通;同步方式为散文件 scp/cat-pipe,不是 git pull。远端曾有与本地 HEAD 逐字节相同的未提交改动(md5 核对后已 checkout 丢弃)。
+- **jubail 仓库已接通 hub(2026-07-13)**:此前 `origin` 只指上游 `lihxxx/DisPose`、与私有 hub(openhe-hub/DMS)不通,靠散文件传输。现已配置:jubail 端 `~/.ssh/id_ed25519_github` 只读 deploy key(hub 仓库 key id 157118769),仓库级 `core.sshCommand` 指定该钥匙,`hub` remote + `main` 跟踪 `hub/main`,工作树已 reset 对齐(160 个 untracked 碰撞文件仅 3 个文档有差异且均为旧稿,备份在 `/scratch/zl6890/zhewen/dispose_untracked_diff_backup_20260713.tgz`)。**同步流程:本地 commit + push origin main → jubail `git pull`**。
 - 生成作业输出 192 帧(不含 ref 帧),fps 24 与源一致。
