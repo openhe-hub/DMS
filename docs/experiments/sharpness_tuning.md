@@ -47,6 +47,24 @@ sbs_*.mp4 并排视频);网格配置
 [`test_sign_sharpness_grid.yaml`](../../configs/test_sign_sharpness_grid.yaml)、
 [`test_sign_omnihand_res.yaml`](../../configs/test_sign_omnihand_res.yaml)。
 
+## 公平复核(固定表情,作业 16698855)
+
+发现 head 姿态默认按 15% 从驱动视频混入(`head_blend_ratio`,原先硬编码),
+表情带随机性、混淆分辨率对比 → 已把该参数暴露到 yaml
+(`inference_ctrl.py`),`head_blend_ratio: 0` 时表情完全钉在参考图。
+固定表情重跑([`test_sign_fair_576_vs_winner.yaml`](../../configs/test_sign_fair_576_vs_winner.yaml)):
+
+| 档 | 手部锐度 |
+| --- | --- |
+| 576 基线 | 7.2 |
+| winner | 15.5(与首跑 15.8 一致,可复现) |
+| winner + OmniHands 全替换手 | 13.9 |
+
+winner+OmniHands 略低(-10%),疑似 hands_score=0.61 让骨架图手部偏暗、
+条件略弱所致(见 fusion.md 风险 2)——**分数 0.9 消融是下一个待办**。
+并排视频:`cmp/sharpness/sbs_fair_576_vs_winner.mp4`、
+`sbs_fair_winner_vs_omnihand.mp4`。
+
 ## 若还要更清晰(未做)
 
 1. 改代码级旋钮:恢复 SVD 原版 guidance 首末帧 1.0→3.0 线性爬升;调
