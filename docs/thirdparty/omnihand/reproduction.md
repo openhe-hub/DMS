@@ -12,7 +12,9 @@
 > `run_demo.py` 顶部 `LIGHT_RED` 改为 `(0.58, 0.24, 1.0)`(亮紫)。
 > `thirdparty/` 不进 git,重新 clone 后需重打这一行补丁(本地和 jubail 均已改)。
 
-**结果统一放在本地 `outputs/omnihand/`(gitignore,不进 git)**:各视频的
+**结果统一放在本地 `outputs/omnihand/`(gitignore,不进 git)**,子目录:
+`orig/`(基线渲染)、`smooth/`(去抖版)、`kps/`(2D 关键点)、`fusion/`
+(DisPose 融合实验)。`orig/` 内为各视频的
 `video_<vname>.mp4` 双手网格 overlay 渲染 + `verify_frame.png` 验证帧;
 远程原件在 jubail `thirdparty/omnihand/demo_out/`。
 
@@ -26,7 +28,7 @@
 | setup 脚本(幂等,可整体重跑) | 远程 `/scratch/zl6890/zhewen/omnihand_setup.sh`,存档 [`scripts/thirdparty/omnihand/omnihand_setup.sh`](../../../scripts/thirdparty/omnihand/omnihand_setup.sh) |
 | Slurm 作业脚本 | 远程 `/scratch/zl6890/zhewen/omnihand_demo.sbatch`,存档 [`scripts/thirdparty/omnihand/omnihand_demo.sbatch`](../../../scripts/thirdparty/omnihand/omnihand_demo.sbatch) |
 | 输出(远程原件) | `thirdparty/omnihand/demo_out/video_<vname>.mp4` + `<vname>/bbox.json` |
-| 输出(本地副本) | `outputs/omnihand/`(gitignore) |
+| 输出(本地副本) | `outputs/omnihand/orig/`(gitignore) |
 
 ## 权重与数据(全部已就位)
 

@@ -15,11 +15,11 @@
 
 融合脚本 [`scripts/hand_fusion/fuse_kps.py`](../../../scripts/hand_fusion/fuse_kps.py):逐帧逐手,DWPose 均值置信度 ≥0.3 保留原检测,否则整手换 OmniHands 投影(分数 0.61)。prep 作业 [`omnihand_fusion_prep.slurm`](../../../scripts/slurm/omnihand_fusion_prep.slurm) 完成 DWPose 提取(复用 `extract_hand_poses.py`)+ 融合 + arm B npz 暂存;生成复用 `hand_pilot_gen.slurm`。
 
-## 结果(本地 `outputs/omnihand_fusion/`,gitignore)
+## 结果(本地 `outputs/omnihand/fusion/`,gitignore)
 
 1. **门控在这批视频上零触发**:3 段绿幕手语视频 DWPose 逐手均值置信度 0.80–0.90,全部 1152 手×帧仅 1 帧 <0.5 → fused 的控制信号与 off 完全一致。**fused arm 因此转为注入链路保真度对照**。
 2. **保真度验证通过**:fused vs off 逐段 PSNR 平均 39.6–44.7 dB(仅 GPU 非确定性微差)——`hand_override` 注入路径不引入任何副作用。
-3. **off vs full 手部质量同级**(逐帧并排 `outputs/omnihand_fusion/cmp/`):easy 内容上 OmniHands 投影驱动的生成不劣于 DWPose 原生。**推论:门控偏灵敏是安全的**——即使误替换了好帧,质量也不掉。
+3. **off vs full 手部质量同级**(逐帧并排 `outputs/omnihand/fusion/cmp/`,off vs full 并排视频 `sbs_off_vs_full_*.mp4` 同目录):easy 内容上 OmniHands 投影驱动的生成不劣于 DWPose 原生。**推论:门控偏灵敏是安全的**——即使误替换了好帧,质量也不掉。
 4. 修复价值的真正战场在 hard27k:用缓存 DWPose 轨迹测算,8 段 gate-A 片段上 0.3 门控触发率 **28.2%**(单段最高 55%,`0ddpfhlmff` 左手 139/142 帧低置信)。
 
 ## 下一步(待定)
