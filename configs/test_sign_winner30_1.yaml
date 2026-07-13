@@ -1,0 +1,94 @@
+# Winner-config pilot on 30/109 hard27k clips (shard 1/5).
+# Protocol identical to test_sign_hard27k*.yaml (graft, no hand_flow, fps30,
+# seed42) except the sharpness winner knobs: 768 / cfg3.0 / tile32 / ovl8.
+# Clip selection: evenly-spaced over the sorted 109 list (no cherry-picking).
+base_model_path: ./pretrained_weights/stable-video-diffusion-img2vid-xt-1-1
+dift_model_path: ./pretrained_weights/stable-diffusion-v1-5
+
+ckpt_path: ./pretrained_weights/MimicMotion_1-1.pth
+controlnet_path: ./pretrained_weights/DisPose.pth
+
+test_case:
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/05eeo9hgt4.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
+
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/05tcw2nou9.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
+
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/06cmo3oe2i.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
+
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/07imqjgcxc.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
+
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/0869ziul0h.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
+
+  - ref_video_path: ./assets/example_data/sign_videos/hard27k_orig/08u9iqeqay.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 30
+    seed: 42
