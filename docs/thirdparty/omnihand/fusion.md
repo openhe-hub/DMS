@@ -19,7 +19,7 @@
 
 1. **门控在这批视频上零触发**:3 段绿幕手语视频 DWPose 逐手均值置信度 0.80–0.90,全部 1152 手×帧仅 1 帧 <0.5 → fused 的控制信号与 off 完全一致。**fused arm 因此转为注入链路保真度对照**。
 2. **保真度验证通过**:fused vs off 逐段 PSNR 平均 39.6–44.7 dB(仅 GPU 非确定性微差)——`hand_override` 注入路径不引入任何副作用。
-3. **off vs full 手部质量同级**(逐帧并排图 + off vs full 并排视频在 `outputs/omnihand/fusion/cmp/arms/`;清晰度调优素材——手部/脸部放大裁剪、576 vs 768 并排——在 `cmp/sharpness/`):easy 内容上 OmniHands 投影驱动的生成不劣于 DWPose 原生。**推论:门控偏灵敏是安全的**——即使误替换了好帧,质量也不掉。
+3. **off vs full 手部质量同级**(证据视频 `outputs/omnihand/fusion/cmp/sbs_off_vs_full_5ok8y.mp4`;本地 fusion/ 已精简为终版固定脸三件套 + cmp/ 关键证据,全部原件在 jubail `outputs/omnihand_fusion/`):easy 内容上 OmniHands 投影驱动的生成不劣于 DWPose 原生。**推论:门控偏灵敏是安全的**——即使误替换了好帧,质量也不掉。
 4. 修复价值的真正战场在 hard27k:用缓存 DWPose 轨迹测算,8 段 gate-A 片段上 0.3 门控触发率 **28.2%**(单段最高 55%,`0ddpfhlmff` 左手 139/142 帧低置信)。
 
 ## 后续:清晰度工程调优(2026-07-13,已完成)
