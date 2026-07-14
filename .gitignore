@@ -168,5 +168,12 @@ outputs/
 
 # Replicate
 .cog
-# Third-party clones at repo root (docs live in docs/thirdparty/)
-/thirdparty/
+# Third-party vendored code IS tracked (patched run_demo.py etc.);
+# only weights/data/outputs below stay out (upstream omnihand @ 935e1f5,
+# inner .git removed at vendoring time)
+/thirdparty/omnihand/checkpoints/
+/thirdparty/omnihand/_DATA/
+/thirdparty/omnihand/demo_out/
+/thirdparty/omnihand/demo_out_smooth/
+/thirdparty/omnihand/kps_out/
+/thirdparty/omnihand/slurm_*.out
