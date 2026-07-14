@@ -10,7 +10,9 @@
 
 > 渲染颜色改动:上游左手默认粉色,在肤色/粉色衣物上不可辨,已把
 > `run_demo.py` 顶部 `LIGHT_RED` 改为 `(0.58, 0.24, 1.0)`(亮紫)。
-> `thirdparty/` 不进 git,重新 clone 后需重打这一行补丁(本地和 jubail 均已改)。
+> 2026-07-15 起 `thirdparty/omnihand/` **代码已 vendor 进 git**(上游 935e1f5 +
+> 全部补丁,内嵌 .git 已移除);仅 checkpoints/_DATA/demo 输出仍 ignore,
+> 补丁随 git pull 自动到位,无需手动重打。
 
 **结果统一放在本地 `outputs/omnihand/`(gitignore,不进 git)**,子目录:
 `orig/`(基线渲染)、`smooth/`(去抖版)、`kps/`(2D 关键点)、`fusion/`
