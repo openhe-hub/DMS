@@ -28,7 +28,7 @@ export OMP_NUM_THREADS=8
 export KMP_DUPLICATE_LIB_OK=TRUE
 
 cd "$REPO"
-WDIRS="$(ls -d outputs/winner30_hard27k/*_w30s*) $(ls -d outputs/winner_rest_hard27k/*_wr*)"
+WDIRS="$(ls -d outputs/winner30_hard27k/*_w30s*) $(ls -d outputs/winner_rest_hard27k/*/)"
 echo "gen dirs: $WDIRS"
 
 python src/metrics/run_eval.py \
