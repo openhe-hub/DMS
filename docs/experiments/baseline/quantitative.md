@@ -82,3 +82,7 @@ run_eval,run_csim,run_fvd,merge_results}.py`; slurm in `scripts/slurm/`.
 - OCR text-artifact rate + background-leakage — quantify the specific failures.
 - Human A/B or back-translation Top-k — perceptual ground truth.
 - Stratify every metric by rejection-vote difficulty tier.
+
+> **2026-07-15 更新**:winner 配置(768/cfg3/tile32,见
+> [../sharpness_tuning.md](../sharpness_tuning.md) 三系统总表)已在同一
+> 109 段基准上 8 项指标赢 MimicMotion 7 项;本文数字对应 576 旧配置。
