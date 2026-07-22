@@ -79,3 +79,54 @@ def blend_head_pose_only(ref_pose: dict, video_pose: dict, blend_ratio: float = 
         result_pose['bodies']['candidate'][kp_id] = ref_kp * (1 - blend_ratio) + video_kp * blend_ratio
 
     return result_pose
+
+
+def blend_face_expression(grafted_pose: dict, video_pose: dict, ref_pose: dict,
+                          blend_ratio: float = 0.0) -> dict:
+    """Blend the driver's facial expression into the (ref-frozen) face landmarks.
+
+    Direct coordinate lerp would drag the face toward the driver's on-screen
+    position/scale, so the video face is first normalized to a shape: centered
+    at its own centroid and scaled by the inter-ocular-distance ratio. The
+    blended shape is re-anchored at the reference face centroid shifted by the
+    head-blend nose offset, so the drawn face keeps following the (partially
+    blended) head sway and the skeleton stays self-consistent.
+
+    blend_ratio=0 returns the pose unchanged (exact prior behavior). Small
+    ratios mostly admit expression deltas (mouth/brow/eye openings); large
+    ratios increasingly admit the driver's face shape (identity leak).
+    """
+    if blend_ratio <= 0:
+        return grafted_pose
+
+    ref_faces = np.asarray(ref_pose['faces'])
+    vid_faces = np.asarray(video_pose['faces'])
+    if ref_faces.shape[0] == 0 or vid_faces.shape[0] == 0:
+        return grafted_pose
+
+    ref_f = ref_faces[0]   # (68, 2)
+    vid_f = vid_faces[0]
+
+    def _interocular(f):
+        # 68-pt convention: 36-41 = one eye, 42-47 = the other
+        return np.linalg.norm(f[36:42].mean(axis=0) - f[42:48].mean(axis=0))
+
+    d_ref, d_vid = _interocular(ref_f), _interocular(vid_f)
+    if d_ref < 1e-6 or d_vid < 1e-6:
+        return grafted_pose
+
+    ref_center = ref_f.mean(axis=0)
+    vid_center = vid_f.mean(axis=0)
+    ref_shape = ref_f - ref_center
+    vid_shape = (vid_f - vid_center) * (d_ref / d_vid)
+    blended_shape = ref_shape * (1 - blend_ratio) + vid_shape * blend_ratio
+
+    NOSE_ID = 0
+    anchor = ref_center + (grafted_pose['bodies']['candidate'][NOSE_ID]
+                           - ref_pose['bodies']['candidate'][NOSE_ID])
+
+    result_pose = copy.deepcopy(grafted_pose)
+    faces = np.asarray(result_pose['faces']).copy()
+    faces[0] = anchor + blended_shape
+    result_pose['faces'] = faces
+    return result_pose

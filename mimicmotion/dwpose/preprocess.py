@@ -6,7 +6,7 @@ import numpy as np
 
 from .util import draw_pose
 from .dwpose_detector import dwpose_detector as dwprocessor
-from .graft import graft_pose_v2, blend_head_pose_only
+from .graft import graft_pose_v2, blend_head_pose_only, blend_face_expression
 from .hand_control import person0_hands
 
 def get_video_pose(
@@ -15,6 +15,7 @@ def get_video_pose(
         sample_stride: int=1,
         graft: bool=False,
         head_blend_ratio: float=0.15,
+        face_blend_ratio: float=0.0,
         return_hands: bool=False,
         hand_override=None):
     """preprocess ref image pose and video pose
@@ -97,6 +98,8 @@ def get_video_pose(
             detected_pose = graft_pose_v2(ref_pose, detected_pose)
             detected_pose = blend_head_pose_only(detected_pose, video_pose_transformed,
                                                  blend_ratio=head_blend_ratio)
+            detected_pose = blend_face_expression(detected_pose, video_pose_transformed,
+                                                  ref_pose, blend_ratio=face_blend_ratio)
         im = draw_pose(detected_pose, height, width)
         output_pose.append(np.array(im))
         body_point.append(detected_pose['bodies'])
