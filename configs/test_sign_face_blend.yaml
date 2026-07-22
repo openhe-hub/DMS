@@ -1,0 +1,65 @@
+# Face/head blend-ratio sweep, REAL generation (winner config throughout).
+# 3 arms on 5ok8y: pinned control (h0.15/f0), conservative (h0.15/f0.4),
+# aggressive (h0.3/f0.6). Picked from the skeleton preview sweep
+# (outputs/face_blend/preview). Judging: expression naturalness, identity
+# retention, and whether head_blend 0.3 reproduces the old 0.20+ artifacts.
+base_model_path: ./pretrained_weights/stable-video-diffusion-img2vid-xt-1-1
+dift_model_path: ./pretrained_weights/stable-diffusion-v1-5
+
+ckpt_path: ./pretrained_weights/MimicMotion_1-1.pth
+controlnet_path: ./pretrained_weights/DisPose.pth
+
+test_case:
+  # 1) control: current default (head 0.15, face pinned)
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0.15
+    face_blend_ratio: 0
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42
+
+  # 2) conservative: head 0.15, face 0.4
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0.15
+    face_blend_ratio: 0.4
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42
+
+  # 3) aggressive: head 0.3, face 0.6
+  - ref_video_path: ./assets/example_data/sign_videos/5ok8y3eheq8_7-1-rgb_front_8s.mp4
+    ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
+    graft_pose: true
+    hand_flow: true
+    head_blend_ratio: 0.3
+    face_blend_ratio: 0.6
+    num_frames: 32
+    resolution: 768
+    frames_overlap: 8
+    num_inference_steps: 25
+    noise_aug_strength: 0
+    guidance_scale: 3.0
+    sample_stride: 1
+    decode_chunk_size: 8
+    fps: 24
+    seed: 42
