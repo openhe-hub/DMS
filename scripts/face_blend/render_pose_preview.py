@@ -47,7 +47,8 @@ def replay_combo(detected_poses, ref_pose, a, b, h, w, head_r, face_r):
             dp = graft_pose_v2(ref_pose, dp)
             dp = blend_head_pose_only(dp, video_t, blend_ratio=head_r)
             dp = blend_face_expression(dp, video_t, ref_pose, blend_ratio=face_r)
-        frames.append(np.array(draw_pose(dp, h, w)))
+        # draw_pose returns CHW RGB; back to HWC for cv2
+        frames.append(np.array(draw_pose(dp, h, w)).transpose(1, 2, 0))
     return frames  # list of RGB uint8 (h, w, 3)
 
 
