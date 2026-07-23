@@ -1,4 +1,6 @@
 # Winner combo from the sharpness grid: 768 + cfg3.0 + tile32/ovl8.
+# head 0.15 / face 0.4 chosen from the face-blend sweep (2026-07-23):
+# expression follows the driver moderately without identity drift.
 base_model_path: ./pretrained_weights/stable-video-diffusion-img2vid-xt-1-1
 dift_model_path: ./pretrained_weights/stable-diffusion-v1-5
 
@@ -10,6 +12,8 @@ test_case:
     ref_image_path: ./assets/example_data/sign_videos/refs/test2.jpg
     graft_pose: true
     hand_flow: true
+    head_blend_ratio: 0.15
+    face_blend_ratio: 0.4
     num_frames: 32
     resolution: 768
     frames_overlap: 8
