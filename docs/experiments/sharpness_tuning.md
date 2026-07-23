@@ -46,15 +46,15 @@ num_inference_steps 25`。相对 576 基线:手部锐度 +155%,耗时 ~3.4×(34m
 `outputs/omnihand_fusion/{res,sharp}/`):`outputs/omnihand/fusion/`——
 `fair_{576,winner,winner_omnihand}.mp4` 三件套 + `cmp/`(同帧手部放大
 `hands_fair_*.png`、源手部参照、并排视频)。网格配置
-[`test_sign_sharpness_grid.yaml`](../../configs/test_sign_sharpness_grid.yaml)、
-[`test_sign_omnihand_res.yaml`](../../configs/test_sign_omnihand_res.yaml)。
+[`test_sign_sharpness_grid.yaml`](../../configs/sharpness/test_sign_sharpness_grid.yaml)、
+[`test_sign_omnihand_res.yaml`](../../configs/omnihand/test_sign_omnihand_res.yaml)。
 
 ## 公平复核(固定表情,作业 16698855)
 
 发现 head 姿态默认按 15% 从驱动视频混入(`head_blend_ratio`,原先硬编码),
 表情带随机性、混淆分辨率对比 → 已把该参数暴露到 yaml
 (`inference_ctrl.py`),`head_blend_ratio: 0` 时表情完全钉在参考图。
-固定表情重跑([`test_sign_fair_576_vs_winner.yaml`](../../configs/test_sign_fair_576_vs_winner.yaml)):
+固定表情重跑([`test_sign_fair_576_vs_winner.yaml`](../../configs/sharpness/test_sign_fair_576_vs_winner.yaml)):
 
 | 档 | 手部锐度 |
 | --- | --- |

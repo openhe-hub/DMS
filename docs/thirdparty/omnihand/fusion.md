@@ -9,9 +9,9 @@
 
 | arm | 手部来源 | 配置 |
 | --- | --- | --- |
-| off | 原生 DWPose | [`test_sign_omnihand_off.yaml`](../../../configs/test_sign_omnihand_off.yaml) |
-| full | OmniHands 全替换(SavGol 防抖) | [`test_sign_omnihand_full.yaml`](../../../configs/test_sign_omnihand_full.yaml) |
-| fused | 置信度门控融合(0.3 整手均值) | [`test_sign_omnihand_fused.yaml`](../../../configs/test_sign_omnihand_fused.yaml) |
+| off | 原生 DWPose | [`test_sign_omnihand_off.yaml`](../../../configs/omnihand/test_sign_omnihand_off.yaml) |
+| full | OmniHands 全替换(SavGol 防抖) | [`test_sign_omnihand_full.yaml`](../../../configs/omnihand/test_sign_omnihand_full.yaml) |
+| fused | 置信度门控融合(0.3 整手均值) | [`test_sign_omnihand_fused.yaml`](../../../configs/omnihand/test_sign_omnihand_fused.yaml) |
 
 融合脚本 [`scripts/hand_fusion/fuse_kps.py`](../../../scripts/hand_fusion/fuse_kps.py):逐帧逐手,DWPose 均值置信度 ≥0.3 保留原检测,否则整手换 OmniHands 投影(分数 0.61)。prep 作业 [`omnihand_fusion_prep.slurm`](../../../scripts/slurm/omnihand_fusion_prep.slurm) 完成 DWPose 提取(复用 `extract_hand_poses.py`)+ 融合 + arm B npz 暂存;生成复用 `hand_pilot_gen.slurm`。
 

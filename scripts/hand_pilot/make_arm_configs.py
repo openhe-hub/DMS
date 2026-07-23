@@ -1,11 +1,11 @@
 """Generate the Gate A run-matrix configs: 8 cases x {off, raw, smooth}.
 
-Cases = the 5 contested-review words from configs/test_sign_hard27k.yaml plus
+Cases = the 5 contested-review words from configs/hard27k/test_sign_hard27k.yaml plus
 the 3 worst clips from Gate B's case ranking (outputs/hand_pilot/gate_b/
 case_ranking.csv). Everything except the hand_flow fields is held fixed
 (graft=true, seed 42, stride 1) so the three arms are strictly paired.
 
-Writes configs/test_sign_handflow_{off,raw,smooth}.yaml.
+Writes configs/siren/test_sign_handflow_{off,raw,smooth}.yaml.
 """
 import argparse
 import csv
@@ -14,7 +14,7 @@ import os
 import _paths as P
 
 BASE_CASES = ["0byrxo0heb", "0ihmqp5iz6", "0hgvcp7paw", "0db3uk2cqw",
-              "0hcd4pdr9p"]  # from configs/test_sign_hard27k.yaml
+              "0hcd4pdr9p"]  # from configs/hard27k/test_sign_hard27k.yaml
 VIDEO_DIR = "./assets/example_data/sign_videos/hard27k_orig"
 REF_IMAGE = "./assets/example_data/sign_videos/refs/test2.jpg"
 
@@ -64,7 +64,7 @@ def main():
     ap.add_argument("--ranking",
                     default=os.path.join(P.GATE_B_DIR, "case_ranking.csv"))
     ap.add_argument("--n_extra", type=int, default=3)
-    ap.add_argument("--out_dir", default=os.path.join(P.REPO, "configs"))
+    ap.add_argument("--out_dir", default=os.path.join(P.REPO, "configs", "siren"))
     ap.add_argument("--arms", default="",
                     help="comma list; default = all ARMS")
     ap.add_argument("--clips", default="",

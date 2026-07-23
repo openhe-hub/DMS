@@ -66,7 +66,7 @@ cross-identity setting.
 
 **Protocol**: all 192 source frames drive the generation (stride 1), output
 fps 24 → **frame-for-frame aligned and iso-speed with the source**.
-- DisPose graft on: jubail 16507781, config `configs/test_sign_align.yaml`
+- DisPose graft on: jubail 16507781, config `configs/early/test_sign_align.yaml`
 - MimicMotion sign version: jubail2 16507783, `batch_process.py --sample-stride 1 --fps 24`, other params matched
 - Frame counts: source 192 / DisPose 192 (internal +1 reference frame, dropped on save) / MimicMotion 193 (padding off-by-one, **first frame trimmed when stitching**)
 
@@ -127,7 +127,7 @@ on the huawei disk.
 committed at `assets/example_data/sign_videos/hard27k_orig/`), original signer
 videos (640×360 @29.97) as driver, `test2.jpg` reference, stride 1 / fps 30 /
 CFG 2.0 / 25 steps / 576 / seed 42 — the aligned §4 protocol. DisPose+graft via
-`configs/test_sign_hard27k.yaml` (5 clips) + `_b2.yaml` (10 more) on jubail
+`configs/hard27k/test_sign_hard27k.yaml` (5 clips) + `_b2.yaml` (10 more) on jubail
 (outputs `20260705_test_sign_hard27k*`); MimicMotion sign version on jubail2
 (`zhewen_cmp/outputs_hard27k_orig*`). These 15 are the first batch of the 109
 used in `quantitative.md` (`_c1..c4` complete the set).

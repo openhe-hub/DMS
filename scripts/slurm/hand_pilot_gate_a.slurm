@@ -39,7 +39,7 @@ nvidia-smi || true
 if [ "$MODE" = "check" ]; then
   echo "===== 41 hand_flow regression (synthetic + real) ====="
   python scripts/hand_pilot/equiv_check_hands.py --mode real \
-    --config configs/test_sign_hard27k.yaml --case 0
+    --config configs/hard27k/test_sign_hard27k.yaml --case 0
   echo "===== original step2 equivalence gate must still PASS ====="
   python scripts/round1_archive/step2/equiv_check.py --config configs/test.yaml --case 1
   echo "CHECK DONE"
@@ -56,7 +56,7 @@ elif [ "$MODE" = "report" ]; then
     --arms off,gain3,gain10 --tag gain
   echo "REPORT DONE"
 else
-  CFG=configs/test_sign_handflow_${MODE}.yaml
+  CFG=configs/siren/test_sign_handflow_${MODE}.yaml
   [ -f "$CFG" ] || { echo "missing $CFG -- run make_arm_configs.py"; exit 1; }
   if [ "$MODE" = "siren" ]; then
     echo "===== reconstructing hand trajectories (crush-xl ckpt) ====="

@@ -11,9 +11,9 @@
 #SBATCH --mail-user=zh3510@nyu.edu
 
 # Usage: sbatch sign_graft_smoke.slurm <config-basename-without-ext>
-# e.g.   sbatch sign_graft_smoke.slurm test_sign_graft_on
+# e.g.   sbatch sign_graft_smoke.slurm early/test_sign_graft_on
 set -euo pipefail
-CFG=${1:?need config basename, e.g. test_sign_graft_on}
+CFG=${1:?need config basename, e.g. early/test_sign_graft_on}
 
 BASE=/scratch/zl6890/zhewen
 REPO=$BASE/DisPose

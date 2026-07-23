@@ -218,7 +218,7 @@ def run_real(config, case):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--mode", choices=("synthetic", "real"), default="synthetic")
-    ap.add_argument("--config", default="configs/test_sign_hard27k.yaml")
+    ap.add_argument("--config", default="configs/hard27k/test_sign_hard27k.yaml")
     ap.add_argument("--case", type=int, default=0)
     args = ap.parse_args()
 

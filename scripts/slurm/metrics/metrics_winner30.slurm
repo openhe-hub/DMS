@@ -33,7 +33,7 @@ cd "$REPO"
 # 30-clip source subset from the shard configs (single source of truth)
 SRC30=outputs/winner30_hard27k/src30
 mkdir -p "$SRC30"
-grep -h 'ref_video_path' configs/test_sign_winner30_*.yaml | awk '{print $3}' | while read -r p; do
+grep -h 'ref_video_path' configs/hard27k/test_sign_winner30_*.yaml | awk '{print $3}' | while read -r p; do
     ln -sf "$REPO/${p#./}" "$SRC30/$(basename "$p")"
 done
 echo "src30 clips: $(ls $SRC30 | wc -l)"

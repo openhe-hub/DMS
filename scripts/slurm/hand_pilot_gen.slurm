@@ -12,7 +12,7 @@
 #SBATCH --error=/scratch/zl6890/zhewen/DisPose/slurm/%x_%j.err
 
 # Generic generation runner: sbatch hand_pilot_gen.slurm CFG OUTDIR NAME
-# e.g. sbatch hand_pilot_gen.slurm configs/test_sign_handflow_reroll123.yaml \
+# e.g. sbatch hand_pilot_gen.slurm configs/siren/test_sign_handflow_reroll123.yaml \
 #        outputs/sign_siren_reroll s123
 set -euo pipefail
 CFG=${1:?config path}

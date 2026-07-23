@@ -30,7 +30,7 @@ export KMP_DUPLICATE_LIB_OK=TRUE
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 cd "$REPO"
-CFG=configs/test_sign_handflow_siren_full_${SHARD}.yaml
+CFG=configs/siren/test_sign_handflow_siren_full_${SHARD}.yaml
 [ -f "$CFG" ] || { echo "missing $CFG"; exit 1; }
 python inference_ctrl.py --inference_config "$CFG" \
   --output_dir outputs/sign_siren_full --name "shard${SHARD}"
